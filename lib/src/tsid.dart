@@ -4,15 +4,15 @@ import 'dart:typed_data';
 import 'package:tsid_dart/src/tsid_error.dart';
 import 'package:convert/convert.dart';
 
-
-
 class Tsid {
   static const int _RANDOM_BITS = 22;
   static const int _RANDOM_MASK = 0x003fffff;
 
   static final _ALPHABET_VALUES = initializeAlphabetValues();
-  static final _ALPHABET_UPPERCASE = Runes("0123456789ABCDEFGHJKMNPQRSTVWXYZ").toList();
-  static final _ALPHABET_LOWERCASE = Runes("0123456789abcdefghjkmnpqrstvwxyz").toList();
+  static final _ALPHABET_UPPERCASE =
+      Runes("0123456789ABCDEFGHJKMNPQRSTVWXYZ").toList();
+  static final _ALPHABET_LOWERCASE =
+      Runes("0123456789abcdefghjkmnpqrstvwxyz").toList();
 
   static const _TSID_BYTES = 8;
   static const _TSID_CHARS = 13;
@@ -518,7 +518,8 @@ class TsidFactoryBuilder {
   late int _nodeBits = TsidFactory._NODE_BITS_1024;
   late int _customEpoch = _TSID_EPOCH;
   late IRandom _random = ByteRandom.fromRandom(Random.secure());
-  late int Function() _timeFunction = () => DateTime.now().millisecondsSinceEpoch;
+  late int Function() _timeFunction =
+      () => DateTime.now().millisecondsSinceEpoch;
 
   TsidFactoryBuilder withNode(int node) {
     _node = node;

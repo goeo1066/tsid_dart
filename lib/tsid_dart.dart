@@ -3,5 +3,5 @@
 /// More dartdocs go here.
 library;
 
-export 'package:tsid_dart/src/tsid.dart';
-export 'package:tsid_dart/src/tsid_error.dart';
+export 'src/tsid.dart';
+export 'src/tsid_error.dart';

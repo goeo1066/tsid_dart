@@ -1,4 +1,4 @@
-import 'package:tsid_dart/src/tsid.dart';
+import 'package:tsid_dart/tsid_dart.dart';
 
 void main() {
   final String HORIZONTAL_LINE = "----------------------------------------";

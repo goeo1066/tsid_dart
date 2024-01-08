@@ -2,7 +2,6 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
-import 'package:tsid_dart/src/tsid.dart';
 import 'package:tsid_dart/tsid_dart.dart';
 import 'package:test/test.dart';
 
@@ -16,8 +15,6 @@ final Runes ALPHABET_JAVA =
 
 void main() {
   group('Collision Test', () {
-    test('testCollision', () {
-
-    });
+    test('testCollision', () {});
   });
 }
