@@ -5,26 +5,26 @@ import 'package:tsid_dart/src/tsid_error.dart';
 import 'package:convert/convert.dart';
 
 class Tsid {
-  static const int _RANDOM_BITS = 22;
-  static const int _RANDOM_MASK = 0x003fffff;
+  static const int _randomBits = 22;
+  static const int _randomMask = 0x003fffff;
 
-  static final _ALPHABET_VALUES = initializeAlphabetValues();
-  static final _ALPHABET_UPPERCASE =
+  static final _alphabetValues = initializeAlphabetValues();
+  static final alphabetUppercase =
       Runes("0123456789ABCDEFGHJKMNPQRSTVWXYZ").toList();
-  static final _ALPHABET_LOWERCASE =
+  static final _alphabetLowercase =
       Runes("0123456789abcdefghjkmnpqrstvwxyz").toList();
 
-  static const _TSID_BYTES = 8;
-  static const _TSID_CHARS = 13;
-  static final _TSID_EPOCH = DateTime.utc(2020).millisecondsSinceEpoch;
+  static const _tsidBytes = 8;
+  static const _tsidChars = 13;
+  static final _tsidEpoch = DateTime.utc(2020).millisecondsSinceEpoch;
 
   static Uint8List initializeAlphabetValues() {
     var values = Uint8List.fromList(List<int>.filled(256, -1));
-    for (var i = 0; i < _ALPHABET_UPPERCASE.length; i++) {
-      values[_ALPHABET_UPPERCASE[i]] = i;
+    for (var i = 0; i < alphabetUppercase.length; i++) {
+      values[alphabetUppercase[i]] = i;
     }
-    for (var i = 0; i < _ALPHABET_UPPERCASE.length; i++) {
-      values[_ALPHABET_LOWERCASE[i]] = i;
+    for (var i = 0; i < alphabetUppercase.length; i++) {
+      values[_alphabetLowercase[i]] = i;
     }
 
     values['O'.codeUnitAt(0)] = 0x00;
@@ -38,10 +38,10 @@ class Tsid {
     return values;
   }
 
-  late final _number;
+  late final int _number;
 
   static int getNumberFromBytes(Uint8List bytes) {
-    if (bytes.length != _TSID_BYTES) {
+    if (bytes.length != _tsidBytes) {
       throw TsidError("Invalid Length of TSID Bytes");
     }
     var number = 0;
@@ -64,19 +64,19 @@ class Tsid {
 
     var number = 0;
 
-    number |= _ALPHABET_VALUES[chars[0x00]] << 60;
-    number |= _ALPHABET_VALUES[chars[0x01]] << 55;
-    number |= _ALPHABET_VALUES[chars[0x02]] << 50;
-    number |= _ALPHABET_VALUES[chars[0x03]] << 45;
-    number |= _ALPHABET_VALUES[chars[0x04]] << 40;
-    number |= _ALPHABET_VALUES[chars[0x05]] << 35;
-    number |= _ALPHABET_VALUES[chars[0x06]] << 30;
-    number |= _ALPHABET_VALUES[chars[0x07]] << 25;
-    number |= _ALPHABET_VALUES[chars[0x08]] << 20;
-    number |= _ALPHABET_VALUES[chars[0x09]] << 15;
-    number |= _ALPHABET_VALUES[chars[0x0a]] << 10;
-    number |= _ALPHABET_VALUES[chars[0x0b]] << 5;
-    number |= _ALPHABET_VALUES[chars[0x0c]];
+    number |= _alphabetValues[chars[0x00]] << 60;
+    number |= _alphabetValues[chars[0x01]] << 55;
+    number |= _alphabetValues[chars[0x02]] << 50;
+    number |= _alphabetValues[chars[0x03]] << 45;
+    number |= _alphabetValues[chars[0x04]] << 40;
+    number |= _alphabetValues[chars[0x05]] << 35;
+    number |= _alphabetValues[chars[0x06]] << 30;
+    number |= _alphabetValues[chars[0x07]] << 25;
+    number |= _alphabetValues[chars[0x08]] << 20;
+    number |= _alphabetValues[chars[0x09]] << 15;
+    number |= _alphabetValues[chars[0x0a]] << 10;
+    number |= _alphabetValues[chars[0x0b]] << 5;
+    number |= _alphabetValues[chars[0x0c]];
 
     return number;
   }
@@ -100,7 +100,7 @@ class Tsid {
   }
 
   Uint8List toBytes() {
-    final bytes = Uint8List(_TSID_BYTES);
+    final bytes = Uint8List(_tsidBytes);
 
     bytes[0x0] = (_number >>> 56);
     bytes[0x1] = (_number >>> 48);
@@ -116,18 +116,18 @@ class Tsid {
 
   static Tsid fast() {
     final time =
-        (DateTime.now().millisecondsSinceEpoch - _TSID_EPOCH) << _RANDOM_BITS;
-    final tail = _LazyHolder.incrementAndGet() & _RANDOM_MASK;
+        (DateTime.now().millisecondsSinceEpoch - _tsidEpoch) << _randomBits;
+    final tail = _LazyHolder.incrementAndGet() & _randomMask;
     return Tsid(time | tail);
   }
 
   @override
   String toString() {
-    return _toString(_ALPHABET_UPPERCASE);
+    return _toString(alphabetUppercase);
   }
 
   String toLowerCase() {
-    return _toString(_ALPHABET_LOWERCASE);
+    return _toString(_alphabetLowercase);
   }
 
   int getUnixMilliseconds(final int customEpoch) {
@@ -135,11 +135,11 @@ class Tsid {
   }
 
   int getTime() {
-    return _number >>> _RANDOM_BITS;
+    return _number >>> _randomBits;
   }
 
   int getRandom() {
-    return _number & _RANDOM_BITS;
+    return _number & _randomBits;
   }
 
   static bool isValid(final String string) {
@@ -147,7 +147,6 @@ class Tsid {
   }
 
   @override
-// TODO: implement hashCode
   int get hashCode => _number ^ _number >>> 32;
 
   int compareTo(Tsid that) {
@@ -244,7 +243,7 @@ class Tsid {
   }
 
   String _toString(final List<int> alphabet) {
-    final Uint8List chars = Uint8List(_TSID_CHARS);
+    final Uint8List chars = Uint8List(_tsidChars);
     chars[0x00] = alphabet[((_number >>> 60) & 0x1F)];
     chars[0x01] = alphabet[((_number >>> 55) & 0x1F)];
     chars[0x02] = alphabet[((_number >>> 50) & 0x1F)];
@@ -271,13 +270,13 @@ class Tsid {
   }
 
   static bool isValidCharArray(final Runes runes) {
-    if (runes.length != _TSID_CHARS) {
+    if (runes.length != _tsidChars) {
       return false;
     }
 
     for (int i = 0; i < runes.length; i++) {
       try {
-        if (_ALPHABET_VALUES[runes.elementAt(i)] == -1) {
+        if (_alphabetValues[runes.elementAt(i)] == -1) {
           return false;
         }
       } on IndexError {
@@ -285,7 +284,7 @@ class Tsid {
       }
     }
 
-    if ((_ALPHABET_VALUES[runes.elementAt(0)] & 0x10) != 0) {
+    if ((_alphabetValues[runes.elementAt(0)] & 0x10) != 0) {
       return false; // overflow!
     }
 
@@ -312,11 +311,20 @@ class Tsid {
   factory Tsid.getTsid4096() {
     return _factory4096Instance.create();
   }
+
+  @override
+  bool operator ==(Object other) {
+    // TODO: implement ==
+    if (other is! Tsid) {
+      return false;
+    }
+    return super.hashCode == other.hashCode;
+  }
 }
 
 class BaseN {
-  static final BigInt MAX = BigInt.two.pow(64) - BigInt.one;
-  static final String ALPHABET =
+  static final BigInt max = BigInt.two.pow(64) - BigInt.one;
+  static final String alphabet =
       "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"; // base-62
 
   static String encode(final Tsid tsid, final int base) {
@@ -332,7 +340,7 @@ class BaseN {
     while (x > BigInt.zero) {
       final BigInt div = x ~/ baseBigInt;
       final BigInt rem = x.remainder(baseBigInt);
-      buffer[--b] = ALPHABET.runes.elementAt(rem.toInt());
+      buffer[--b] = alphabet.runes.elementAt(rem.toInt());
       x = div;
     }
 
@@ -357,7 +365,7 @@ class BaseN {
     }
 
     for (int i = 0; i < length; i++) {
-      plus = ALPHABET.indexOf(string.substring(i, i + 1)); // ???
+      plus = alphabet.indexOf(string.substring(i, i + 1)); // ???
       if (plus == -1) {
         throw TsidError(
             "Invalid base-$base character: $string.substring(i, i + 1)");
@@ -374,7 +382,7 @@ class BaseN {
     BigInt lazt = BigInt.parse(bytesString, radix: 16);
     BigInt baze = BigInt.from(base);
     BigInt pluz = BigInt.from(plus);
-    if ((lazt * baze) + pluz > MAX) {
+    if ((lazt * baze) + pluz > max) {
       throw TsidError("Invalid base-$base value (overflow): $lazt");
     }
 
@@ -387,12 +395,12 @@ class BaseN {
 }
 
 class _LazyHolder {
-  static const int MAX_INT = 0x7FFFFFFFFFFFFFFF;
+  static const int maxInt = 0x7FFFFFFFFFFFFFFF;
 
-  static int COUNTER = Random().nextInt(MAX_INT);
+  static int counter = Random().nextInt(maxInt);
 
   static int incrementAndGet() {
-    return ++COUNTER;
+    return ++counter;
   }
 }
 
@@ -409,12 +417,12 @@ class TsidFactory {
   late final IRandom _random;
   late final int _randomBytes;
 
-  static final int _RANDOM_BITS = Tsid._RANDOM_BITS;
-  static final int _RANDOM_MASK = Tsid._RANDOM_MASK;
+  static final int _randomBits = Tsid._randomBits;
+  static final int _randomMask = Tsid._randomMask;
 
-  static final int _NODE_BITS_256 = 8;
-  static final int _NODE_BITS_1024 = 10;
-  static final int _NODE_BITS_4096 = 12;
+  static final int _nodeBits256 = 8;
+  static final int _nodeBits1024 = 10;
+  static final int _nodeBits4096 = 12;
 
   TsidFactory() : this.fromBuilder(builder());
 
@@ -426,9 +434,9 @@ class TsidFactory {
     _random = builder.random;
     _timeFunction = builder.timeFunction;
 
-    _counterBits = _RANDOM_BITS - _nodeBits;
-    _counterMask = _RANDOM_MASK >>> _nodeBits;
-    _nodeMask = _RANDOM_MASK >>> _counterBits;
+    _counterBits = _randomBits - _nodeBits;
+    _counterMask = _randomMask >>> _nodeBits;
+    _nodeMask = _randomMask >>> _counterBits;
 
     _randomBytes = ((_counterBits - 1) ~/ 8) + 1;
 
@@ -438,7 +446,7 @@ class TsidFactory {
   }
 
   factory TsidFactory.newInstance256({int? node}) {
-    var factory = TsidFactory.builder().withNodeBits(_NODE_BITS_256);
+    var factory = TsidFactory.builder().withNodeBits(_nodeBits256);
     if (node != null) {
       factory = factory.withNode(node);
     }
@@ -446,7 +454,7 @@ class TsidFactory {
   }
 
   factory TsidFactory.newInstance1024({int? node}) {
-    var factory = TsidFactory.builder().withNodeBits(_NODE_BITS_1024);
+    var factory = TsidFactory.builder().withNodeBits(_nodeBits1024);
     if (node != null) {
       factory = factory.withNode(node);
     }
@@ -454,7 +462,7 @@ class TsidFactory {
   }
 
   factory TsidFactory.newInstance4096({int? node}) {
-    var factory = TsidFactory.builder().withNodeBits(_NODE_BITS_4096);
+    var factory = TsidFactory.builder().withNodeBits(_nodeBits4096);
     if (node != null) {
       factory = factory.withNode(node);
     }
@@ -464,11 +472,11 @@ class TsidFactory {
   Tsid create() {
 // lock.lock()
     try {
-      final int __time = getTime() << _RANDOM_BITS;
-      final int __node = _node << _counterBits;
-      final int __counter = _counter & _counterMask;
+      final int time = getTime() << _randomBits;
+      final int node = _node << _counterBits;
+      final int counter = _counter & _counterMask;
 
-      return Tsid(__time | __node | __counter);
+      return Tsid(time | node | counter);
     } finally {
 // lock.unlock();
     }
@@ -513,10 +521,11 @@ class TsidFactory {
 }
 
 class TsidFactoryBuilder {
-  static final _TSID_EPOCH = Tsid._TSID_EPOCH;
+  static final _tsidEpoch = Tsid._tsidEpoch;
+  // error if removed
   late int? _node = null;
-  late int _nodeBits = TsidFactory._NODE_BITS_1024;
-  late int _customEpoch = _TSID_EPOCH;
+  late int _nodeBits = TsidFactory._nodeBits1024;
+  late int _customEpoch = _tsidEpoch;
   late IRandom _random = ByteRandom.fromRandom(Random.secure());
   late int Function() _timeFunction =
       () => DateTime.now().millisecondsSinceEpoch;
@@ -581,7 +590,7 @@ class TsidFactoryBuilder {
     if (Settings.getNodeCount() != null) {
       _nodeBits = log(Settings.getNodeCount()!) ~/ log(2);
     } else {
-      _nodeBits = TsidFactory._NODE_BITS_1024;
+      _nodeBits = TsidFactory._nodeBits1024;
     }
 
     if (_nodeBits < 0 || _nodeBits > 20) {
@@ -628,7 +637,7 @@ class IntRandom implements IRandom {
 
   static int Function() newRandomFunction(Random random) {
     return () {
-      return random.nextInt(_LazyHolder.MAX_INT);
+      return random.nextInt(_LazyHolder.maxInt);
     };
   }
 
@@ -694,15 +703,15 @@ class ByteRandom implements IRandom {
 }
 
 class Settings {
-  static final String NODE = "tsidcreator.node";
-  static final String NODE_COUNT = "tsidcreator.node.count";
+  static final String node = "tsidcreator.node";
+  static final String nodeCount = "tsidcreator.node.count";
 
   static int? getNode() {
-    return getPropertyAsInt(NODE);
+    return getPropertyAsInt(node);
   }
 
   static int? getNodeCount() {
-    return getPropertyAsInt(NODE_COUNT);
+    return getPropertyAsInt(nodeCount);
   }
 
   static int? getPropertyAsInt(String property) {

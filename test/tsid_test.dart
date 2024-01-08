@@ -5,19 +5,19 @@ import 'package:collection/collection.dart';
 import 'package:tsid_dart/tsid_dart.dart';
 import 'package:test/test.dart';
 
-final int TIME_BITS = 42;
-final int RANDOM_BITS = 22;
-final int LOOP_MAX = 1000;
-final int MAX_LONG = 4294967296;
-final Runes ALPHABET_CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ".runes;
-final Runes ALPHABET_JAVA =
+final int timeBits = 42;
+final int randomBits = 22;
+final int loopMax = 1000;
+final int maxLong = 4294967296;
+final Runes alphabetCrockford = "0123456789ABCDEFGHJKMNPQRSTVWXYZ".runes;
+final Runes alphabetJava =
     "0123456789abcdefghijklmnopqrstuv".runes; // Long.parseUnsignedLong()
 
 void main() {
   group('TSID Test', () {
     test('testFromBytes', () {
-      for (int i = 0; i < LOOP_MAX; i++) {
-        final int number0 = Random().nextInt(MAX_LONG);
+      for (int i = 0; i < loopMax; i++) {
+        final int number0 = Random().nextInt(maxLong);
         final ByteData buffer = ByteData(8);
         buffer.setInt64(0, number0);
         Uint8List bytes = buffer.buffer.asUint8List();
@@ -28,8 +28,8 @@ void main() {
     });
 
     test('testToBytes', () {
-      for (int i = 0; i < LOOP_MAX; i++) {
-        final int number = Random().nextInt(MAX_LONG);
+      for (int i = 0; i < loopMax; i++) {
+        final int number = Random().nextInt(maxLong);
         final ByteData buffer = ByteData(8);
         buffer.setInt64(0, number);
         Uint8List bytes0 = buffer.buffer.asUint8List();
@@ -42,8 +42,8 @@ void main() {
     });
 
     test('testFromString', () {
-      for (int i = 0; i < LOOP_MAX; i++) {
-        final int number0 = Random().nextInt(MAX_LONG);
+      for (int i = 0; i < loopMax; i++) {
+        final int number0 = Random().nextInt(maxLong);
         final String string0 = toString(number0);
         final int number1 = Tsid.fromString(string0).toLong();
         assert(number0 == number1);
@@ -51,8 +51,8 @@ void main() {
     });
 
     test('testToString', () {
-      for (int i = 0; i < LOOP_MAX; i++) {
-        final int number = Random().nextInt(MAX_LONG);
+      for (int i = 0; i < loopMax; i++) {
+        final int number = Random().nextInt(maxLong);
         final String string0 = toString(number);
         final String string1 = Tsid.fromNumber(number).toString();
         assert(string0 == string1);
@@ -63,7 +63,7 @@ void main() {
 
 int fromString(String tsid) {
   var number = tsid.substring(0, 10);
-  number = transliterate(number, ALPHABET_CROCKFORD, ALPHABET_JAVA);
+  number = transliterate(number, alphabetCrockford, alphabetJava);
   return int.parse(number, radix: 32);
 }
 
@@ -72,7 +72,7 @@ String toString(int stid) {
   String number = stid.toUnsigned(64).toRadixString(32);
   number = zero.substring(0, zero.length - number.length) + number;
 
-  return transliterate(number, ALPHABET_JAVA, ALPHABET_CROCKFORD);
+  return transliterate(number, alphabetJava, alphabetCrockford);
 }
 
 String transliterate(String string, Runes alphabet1, Runes alphabet2) {
