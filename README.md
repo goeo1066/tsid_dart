@@ -18,3 +18,13 @@ create a TSID as string:
 ```dart
 var string = Tsid.getTsid().toString();
 ```
+
+### Dependency
+
+```yaml
+# pubspec.yaml
+...
+dependencies:
+  tsid_dart: ^0.0.2
+...
+```
