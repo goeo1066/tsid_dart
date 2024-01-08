@@ -4,21 +4,19 @@ import 'dart:typed_data';
 import 'package:tsid_dart/src/tsid_error.dart';
 import 'package:convert/convert.dart';
 
-class Tsid {
-  static final _TSID_BYTES = 8;
-  static final _TSID_CHARS = 13;
-  static final _TSID_EPOCH =
-      DateTime(2020, 1, 1, 0, 0, 0, 0).millisecondsSinceEpoch;
 
-  late final _number;
-  static final _RANDOM_BITS = 32;
-  static final _RANDOM_MASK = 0x003fffff;
+
+class Tsid {
+  static const int _RANDOM_BITS = 22;
+  static const int _RANDOM_MASK = 0x003fffff;
 
   static final _ALPHABET_VALUES = initializeAlphabetValues();
-  static final _ALPHABET_UPPERCASE =
-      Runes("0123456789ABCDEFGHJKMNPQRSTVWXYZ").toList();
-  static final _ALPHABET_LOWERCASE =
-      Runes("0123456789abcdefghjkmnpqrstvwxyz").toList();
+  static final _ALPHABET_UPPERCASE = Runes("0123456789ABCDEFGHJKMNPQRSTVWXYZ").toList();
+  static final _ALPHABET_LOWERCASE = Runes("0123456789abcdefghjkmnpqrstvwxyz").toList();
+
+  static const _TSID_BYTES = 8;
+  static const _TSID_CHARS = 13;
+  static final _TSID_EPOCH = DateTime.utc(2020).millisecondsSinceEpoch;
 
   static Uint8List initializeAlphabetValues() {
     var values = Uint8List.fromList(List<int>.filled(256, -1));
@@ -39,6 +37,8 @@ class Tsid {
 
     return values;
   }
+
+  late final _number;
 
   static int getNumberFromBytes(Uint8List bytes) {
     if (bytes.length != _TSID_BYTES) {
@@ -147,7 +147,7 @@ class Tsid {
   }
 
   @override
-  // TODO: implement hashCode
+// TODO: implement hashCode
   int get hashCode => _number ^ _number >>> 32;
 
   int compareTo(Tsid that) {
@@ -292,8 +292,6 @@ class Tsid {
     return true; // It seems to be OK.
   }
 
-
-
   static final TsidFactory _factoryInstance = TsidFactory();
   static final TsidFactory _factory256Instance = TsidFactory.newInstance256();
   static final TsidFactory _factory1024Instance = TsidFactory.newInstance1024();
@@ -411,6 +409,9 @@ class TsidFactory {
   late final IRandom _random;
   late final int _randomBytes;
 
+  static final int _RANDOM_BITS = Tsid._RANDOM_BITS;
+  static final int _RANDOM_MASK = Tsid._RANDOM_MASK;
+
   static final int _NODE_BITS_256 = 8;
   static final int _NODE_BITS_1024 = 10;
   static final int _NODE_BITS_4096 = 12;
@@ -425,9 +426,9 @@ class TsidFactory {
     _random = builder.random;
     _timeFunction = builder.timeFunction;
 
-    _counterBits = Tsid._RANDOM_BITS - _nodeBits;
-    _counterMask = Tsid._RANDOM_MASK >>> _nodeBits;
-    _nodeMask = Tsid._RANDOM_MASK >>> _counterBits;
+    _counterBits = _RANDOM_BITS - _nodeBits;
+    _counterMask = _RANDOM_MASK >>> _nodeBits;
+    _nodeMask = _RANDOM_MASK >>> _counterBits;
 
     _randomBytes = ((_counterBits - 1) ~/ 8) + 1;
 
@@ -461,15 +462,15 @@ class TsidFactory {
   }
 
   Tsid create() {
-    // lock.lock()
+// lock.lock()
     try {
-      final int __time = getTime() << Tsid._RANDOM_BITS;
+      final int __time = getTime() << _RANDOM_BITS;
       final int __node = _node << _counterBits;
       final int __counter = _counter & _counterMask;
 
       return Tsid(__time | __node | __counter);
     } finally {
-      // lock.unlock();
+// lock.unlock();
     }
   }
 
@@ -512,11 +513,12 @@ class TsidFactory {
 }
 
 class TsidFactoryBuilder {
-  late int _node;
+  static final _TSID_EPOCH = Tsid._TSID_EPOCH;
+  late int? _node = null;
   late int _nodeBits = TsidFactory._NODE_BITS_1024;
-  late int _customEpoch = Tsid._TSID_EPOCH;
+  late int _customEpoch = _TSID_EPOCH;
   late IRandom _random = ByteRandom.fromRandom(Random.secure());
-  late int Function() _timeFunction = () => DateTime.now().millisecond;
+  late int Function() _timeFunction = () => DateTime.now().millisecondsSinceEpoch;
 
   TsidFactoryBuilder withNode(int node) {
     _node = node;
@@ -563,14 +565,15 @@ class TsidFactoryBuilder {
   }
 
   int get node {
-    int node;
     final int max = (1 << _nodeBits) - 1;
-    if (Settings.getNode() != null) {
-      node = Settings.getNode()!;
-    } else {
-      node = _random.nextInt() & max;
+    if (_node == null) {
+      if (Settings.getNode() != null) {
+        _node = Settings.getNode()!;
+      } else {
+        _node = _random.nextInt() & max;
+      }
     }
-    return _node = node;
+    return _node!;
   }
 
   int get nodeBits {
@@ -681,7 +684,7 @@ class ByteRandom implements IRandom {
   int nextInt() {
     int number = 0;
     Uint8List bytes = _randomFunction(4);
-    /* Integer.BYTES */;
+/* Integer.BYTES */
     for (int i = 0; i < 4 /* Integer.BYTES */; i++) {
       number = (number << 8) | (bytes[i] & 0xff);
     }
@@ -714,7 +717,6 @@ class Settings {
   }
 
   static String? getProperty(String name) {
-    // TODO: find and add a proper dart way of implementing 'System.getProperty' of Java
     String property =
         String.fromEnvironment(name.toUpperCase(), defaultValue: '');
     if (property.isNotEmpty) {

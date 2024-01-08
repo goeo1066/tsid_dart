@@ -3,6 +3,5 @@
 /// More dartdocs go here.
 library;
 
-export 'src/tsid_dart_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+export 'package:tsid_dart/src/tsid.dart';
+export 'package:tsid_dart/src/tsid_error.dart';
