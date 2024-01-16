@@ -5,8 +5,6 @@ class Tsid {
     throw Exception("Stub implementation");
   }
 
-  late final int _number;
-
   static int getNumberFromBytes(Uint8List bytes) {
     throw Exception("Stub implementation");
   }
@@ -16,7 +14,7 @@ class Tsid {
   }
 
   Tsid(final int number) {
-    _number = number;
+    throw Exception("Stub implementation");
   }
 
   Tsid.fromNumber(final int number) : this(number);
