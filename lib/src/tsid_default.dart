@@ -313,13 +313,7 @@ class Tsid {
   }
 
   @override
-  bool operator ==(Object other) {
-    // TODO: implement ==
-    if (other is! Tsid) {
-      return false;
-    }
-    return super.hashCode == other.hashCode;
-  }
+  bool operator ==(covariant Tsid other) => compareTo(other) == 0;
 }
 
 class BaseN {

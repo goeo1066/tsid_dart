@@ -58,6 +58,15 @@ void main() {
         assert(string0 == string1);
       }
     });
+
+    test('testOperator==', () {
+      for (int i = 0; i < loopMax; i++) {
+        final int number = Random().nextInt(maxLong);
+        final Tsid tsid1 = Tsid.fromNumber(number);
+        final Tsid tsid2 = Tsid.fromNumber(number);
+        assert(tsid1 == tsid2);
+      }
+    });
   });
 }
 
