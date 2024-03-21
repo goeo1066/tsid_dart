@@ -16,7 +16,8 @@ class Tsid {
 
   static const _tsidBytes = 8;
   static const _tsidChars = 13;
-  static final _tsidEpoch = BigInt.from(DateTime.utc(2020).millisecondsSinceEpoch);
+  static final _tsidEpoch =
+      BigInt.from(DateTime.utc(2020).millisecondsSinceEpoch);
 
   static Uint8List initializeAlphabetValues() {
     var values = Uint8List.fromList(List<int>.filled(256, -1));
@@ -332,13 +333,7 @@ class Tsid {
   }
 
   @override
-  bool operator ==(Object other) {
-    // TODO: implement ==
-    if (other is! Tsid) {
-      return false;
-    }
-    return super.hashCode == other.hashCode;
-  }
+  bool operator ==(covariant Tsid other) => compareTo(other) == 0;
 }
 
 class BaseN {
@@ -467,7 +462,8 @@ class TsidFactory {
 
   TsidFactory() : this.fromBuilder(builder());
 
-  TsidFactory.fromNode(BigInt node) : this.fromBuilder(builder().withNode(node));
+  TsidFactory.fromNode(BigInt node)
+      : this.fromBuilder(builder().withNode(node));
 
   TsidFactory.fromBuilder(TsidFactoryBuilder builder) {
     _customEpoch = builder.customEpoch;
@@ -544,7 +540,8 @@ class TsidFactory {
         case 1:
           return BigInt.from(bytes[0] & 0xFF) & _counterMask;
         case 2:
-          return BigInt.from(((bytes[0] & 0xFF) << 8) | (bytes[1] & 0xFF)) & _counterMask;
+          return BigInt.from(((bytes[0] & 0xFF) << 8) | (bytes[1] & 0xFF)) &
+              _counterMask;
         default:
           return BigInt.from(((bytes[0] & 0xff) << 16) |
                   ((bytes[1] & 0xff) << 8) |
@@ -630,7 +627,8 @@ class TsidFactoryBuilder {
 
   BigInt get nodeBits {
     if (Settings.getNodeCount() != null) {
-      _nodeBits = BigInt.from(log(Settings.getNodeCount()!.toDouble()) ~/ log(2));
+      _nodeBits =
+          BigInt.from(log(Settings.getNodeCount()!.toDouble()) ~/ log(2));
     } else {
       _nodeBits = TsidFactory._nodeBits1024;
     }
@@ -769,7 +767,7 @@ class Settings {
   }
 
   static String? getProperty(String name) {
-    String property = mockSettings[name]??'';
+    String property = mockSettings[name] ?? '';
     if (property.isNotEmpty) {
       return property;
     }
