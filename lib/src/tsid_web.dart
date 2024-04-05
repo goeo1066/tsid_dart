@@ -171,7 +171,7 @@ class Tsid {
   int compareTo(Tsid that) {
     final BigInt min = BigInt.from(0x8000000000000000);
     final BigInt a = _number + min;
-    final BigInt b = _number + min;
+    final BigInt b = that._number + min;
 
     if (a > b) {
       return 1;
