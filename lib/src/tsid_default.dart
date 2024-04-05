@@ -152,7 +152,7 @@ class Tsid {
   int compareTo(Tsid that) {
     final int min = 0x8000000000000000;
     final int a = _number + min;
-    final int b = _number + min;
+    final int b = that._number + min;
 
     if (a > b) {
       return 1;

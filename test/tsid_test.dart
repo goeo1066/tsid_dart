@@ -59,13 +59,25 @@ void main() {
       }
     });
 
-    test('testOperator==', () {
-      for (int i = 0; i < loopMax; i++) {
-        final int number = Random().nextInt(maxLong);
-        final Tsid tsid1 = Tsid.fromNumber(number);
-        final Tsid tsid2 = Tsid.fromNumber(number);
-        assert(tsid1 == tsid2);
-      }
+    group('Operator ==', () {
+      test('equal number', () {
+        for (int i = 0; i < loopMax; i++) {
+          final int number = Random().nextInt(maxLong);
+          final Tsid tsid1 = Tsid.fromNumber(number);
+          final Tsid tsid2 = Tsid.fromNumber(number);
+          assert(tsid1 == tsid2);
+        }
+      });
+
+      test('different number', () {
+        for (int i = 0; i < loopMax; i++) {
+          final int number1 = Random().nextInt(maxLong);
+          final int number2 = Random().nextInt(maxLong);
+          final Tsid tsid1 = Tsid.fromNumber(number1);
+          final Tsid tsid2 = Tsid.fromNumber(number2);
+          assert(tsid1 != tsid2);
+        }
+      });
     });
   });
 }
