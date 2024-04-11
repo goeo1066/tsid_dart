@@ -1,10 +1,11 @@
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:tsid_dart/src/tsid_stub.dart' as stub;
 import 'package:tsid_dart/src/tsid_error.dart';
 import 'package:convert/convert.dart';
 
-class Tsid {
+class Tsid implements stub.Tsid<BigInt> {
   static final BigInt _randomBits = BigInt.from(22);
   static final BigInt _randomMask = BigInt.from(0x003fffff);
 
@@ -97,10 +98,12 @@ class Tsid {
   //   return _number;
   // }
 
+  @override
   BigInt toLong() {
     return _number;
   }
 
+  @override
   Uint8List toBytes() {
     final bytes = Uint8List(_tsidBytes);
 
@@ -145,18 +148,22 @@ class Tsid {
     return _toString(alphabetUppercase);
   }
 
+  @override
   String toLowerCase() {
     return _toString(_alphabetLowercase);
   }
 
+  @override
   BigInt getUnixMilliseconds(final BigInt customEpoch) {
     return getTime() + customEpoch;
   }
 
+  @override
   BigInt getTime() {
     return _number >> _randomBits.toInt();
   }
 
+  @override
   BigInt getRandom() {
     return _number & _randomBits;
   }
@@ -168,7 +175,8 @@ class Tsid {
   @override
   int get hashCode => ((_number ^ _number) >> 32).toInt();
 
-  int compareTo(Tsid that) {
+  @override
+  int compareTo(covariant Tsid that) {
     final BigInt min = BigInt.from(0x8000000000000000);
     final BigInt a = _number + min;
     final BigInt b = that._number + min;
@@ -182,6 +190,7 @@ class Tsid {
     return 0;
   }
 
+  @override
   String encode(final int base) {
     return BaseN.encode(this, base);
   }
@@ -190,6 +199,7 @@ class Tsid {
     return BaseN.decode(string, base);
   }
 
+  @override
   String format(final String format) {
     final int i = format.indexOf('%');
     if (i < 0 || i == format.length - 1) {

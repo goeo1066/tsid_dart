@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-class Tsid {
+interface class Tsid<T> {
   static Uint8List initializeAlphabetValues() {
     throw Exception("Stub implementation");
   }
@@ -23,8 +23,9 @@ class Tsid {
 
   Tsid.fromString(String string) : this(getNumberFromString(string));
 
-  int toLong() {
-    throw Exception("Stub implementation");  }
+  T toLong() {
+    throw Exception("Stub implementation");
+  }
 
   Uint8List toBytes() {
     throw Exception("Stub implementation");
@@ -36,19 +37,24 @@ class Tsid {
 
   @override
   String toString() {
-    throw Exception("Stub implementation");  }
+    throw Exception("Stub implementation");
+  }
 
   String toLowerCase() {
-    throw Exception("Stub implementation");  }
+    throw Exception("Stub implementation");
+  }
 
-  int getUnixMilliseconds(final int customEpoch) {
-    throw Exception("Stub implementation");  }
+  T getUnixMilliseconds(final T customEpoch) {
+    throw Exception("Stub implementation");
+  }
 
-  int getTime() {
-    throw Exception("Stub implementation");  }
+  T getTime() {
+    throw Exception("Stub implementation");
+  }
 
-  int getRandom() {
-    throw Exception("Stub implementation");  }
+  T getRandom() {
+    throw Exception("Stub implementation");
+  }
 
   static bool isValid(final String string) {
     throw Exception("Stub implementation");
@@ -85,7 +91,6 @@ class Tsid {
     throw Exception("Stub implementation");
   }
 
-
   factory Tsid.getTsid() {
     throw Exception("Stub implementation");
   }
@@ -100,14 +105,5 @@ class Tsid {
 
   factory Tsid.getTsid4096() {
     throw Exception("Stub implementation");
-  }
-
-  @override
-  bool operator ==(Object other) {
-    // TODO: implement ==
-    if (other is! Tsid) {
-      return false;
-    }
-    return super.hashCode == other.hashCode;
   }
 }
