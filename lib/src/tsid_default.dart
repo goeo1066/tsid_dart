@@ -1,11 +1,11 @@
 import 'dart:math';
 import 'dart:typed_data';
-import 'package:tsid_dart/src/tsid_stub.dart' as stub;
+import 'package:tsid_dart/src/tsid.dart' as t;
 
 import 'package:tsid_dart/src/tsid_error.dart';
 import 'package:convert/convert.dart';
 
-class Tsid implements stub.Tsid<int> {
+class Tsid implements t.Tsid<int> {
   static const int _randomBits = 22;
   static const int _randomMask = 0x003fffff;
 
