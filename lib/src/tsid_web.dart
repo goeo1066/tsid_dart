@@ -1,11 +1,10 @@
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:tsid_dart/src/tsid.dart' as t;
 import 'package:tsid_dart/src/tsid_error.dart';
 import 'package:convert/convert.dart';
 
-class Tsid implements t.Tsid<BigInt> {
+class Tsid {
   static final BigInt _randomBits = BigInt.from(22);
   static final BigInt _randomMask = BigInt.from(0x003fffff);
 
