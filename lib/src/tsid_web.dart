@@ -45,18 +45,19 @@ class Tsid {
     if (bytes.length != _tsidBytes) {
       throw TsidError("Invalid Length of TSID Bytes");
     }
-    var number = 0;
 
-    number |= (bytes[0x0] & 0xff) << 56;
-    number |= (bytes[0x1] & 0xff) << 48;
-    number |= (bytes[0x2] & 0xff) << 40;
-    number |= (bytes[0x3] & 0xff) << 32;
-    number |= (bytes[0x4] & 0xff) << 24;
-    number |= (bytes[0x5] & 0xff) << 16;
-    number |= (bytes[0x6] & 0xff) << 8;
-    number |= (bytes[0x7] & 0xff);
+    BigInt number = BigInt.from(0);
 
-    return BigInt.from(number);
+    number |= BigInt.from((bytes[0x0] & 0xff)) << 56;
+    number |= BigInt.from((bytes[0x1] & 0xff)) << 48;
+    number |= BigInt.from((bytes[0x2] & 0xff)) << 40;
+    number |= BigInt.from((bytes[0x3] & 0xff)) << 32;
+    number |= BigInt.from((bytes[0x4] & 0xff)) << 24;
+    number |= BigInt.from((bytes[0x5] & 0xff)) << 16;
+    number |= BigInt.from((bytes[0x6] & 0xff)) << 8;
+    number |= BigInt.from((bytes[0x7] & 0xff));
+
+    return number;
   }
 
   static BigInt getNumberFromString(String string) {
@@ -755,6 +756,7 @@ class Settings {
   static final String node = "tsidcreator.node";
   static final String nodeCount = "tsidcreator.node.count";
   static final Map<String, String> mockSettings = <String, String>{};
+
   static BigInt? getNode() {
     return getPropertyAsInt(node);
   }
