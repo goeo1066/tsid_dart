@@ -63,23 +63,23 @@ class Tsid {
     Uint8List chars = Uint8List.fromList(
         string.split('').map((e) => e.codeUnitAt(0)).toList(growable: false));
 
-    BigInt number = BigInt.from(0);
+    var number = 0;
 
-    number |= BigInt.from(_alphabetValues[chars[0x00]]) << 60;
-    number |= BigInt.from(_alphabetValues[chars[0x01]]) << 55;
-    number |= BigInt.from(_alphabetValues[chars[0x02]]) << 50;
-    number |= BigInt.from(_alphabetValues[chars[0x03]]) << 45;
-    number |= BigInt.from(_alphabetValues[chars[0x04]]) << 40;
-    number |= BigInt.from(_alphabetValues[chars[0x05]]) << 35;
-    number |= BigInt.from(_alphabetValues[chars[0x06]]) << 30;
-    number |= BigInt.from(_alphabetValues[chars[0x07]]) << 25;
-    number |= BigInt.from(_alphabetValues[chars[0x08]]) << 20;
-    number |= BigInt.from(_alphabetValues[chars[0x09]]) << 15;
-    number |= BigInt.from(_alphabetValues[chars[0x0a]]) << 10;
-    number |= BigInt.from(_alphabetValues[chars[0x0b]]) << 5;
-    number |= BigInt.from(_alphabetValues[chars[0x0c]]);
+    number |= _alphabetValues[chars[0x00]] << 60;
+    number |= _alphabetValues[chars[0x01]] << 55;
+    number |= _alphabetValues[chars[0x02]] << 50;
+    number |= _alphabetValues[chars[0x03]] << 45;
+    number |= _alphabetValues[chars[0x04]] << 40;
+    number |= _alphabetValues[chars[0x05]] << 35;
+    number |= _alphabetValues[chars[0x06]] << 30;
+    number |= _alphabetValues[chars[0x07]] << 25;
+    number |= _alphabetValues[chars[0x08]] << 20;
+    number |= _alphabetValues[chars[0x09]] << 15;
+    number |= _alphabetValues[chars[0x0a]] << 10;
+    number |= _alphabetValues[chars[0x0b]] << 5;
+    number |= _alphabetValues[chars[0x0c]];
 
-    return number;
+    return BigInt.from(number);
   }
 
   Tsid(final BigInt number) {
