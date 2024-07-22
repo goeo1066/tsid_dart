@@ -45,41 +45,42 @@ class Tsid {
     if (bytes.length != _tsidBytes) {
       throw TsidError("Invalid Length of TSID Bytes");
     }
-    var number = 0;
 
-    number |= (bytes[0x0] & 0xff) << 56;
-    number |= (bytes[0x1] & 0xff) << 48;
-    number |= (bytes[0x2] & 0xff) << 40;
-    number |= (bytes[0x3] & 0xff) << 32;
-    number |= (bytes[0x4] & 0xff) << 24;
-    number |= (bytes[0x5] & 0xff) << 16;
-    number |= (bytes[0x6] & 0xff) << 8;
-    number |= (bytes[0x7] & 0xff);
+    BigInt number = BigInt.from(0);
 
-    return BigInt.from(number);
+    number |= BigInt.from((bytes[0x0] & 0xff)) << 56;
+    number |= BigInt.from((bytes[0x1] & 0xff)) << 48;
+    number |= BigInt.from((bytes[0x2] & 0xff)) << 40;
+    number |= BigInt.from((bytes[0x3] & 0xff)) << 32;
+    number |= BigInt.from((bytes[0x4] & 0xff)) << 24;
+    number |= BigInt.from((bytes[0x5] & 0xff)) << 16;
+    number |= BigInt.from((bytes[0x6] & 0xff)) << 8;
+    number |= BigInt.from((bytes[0x7] & 0xff));
+
+    return number;
   }
 
   static BigInt getNumberFromString(String string) {
     Uint8List chars = Uint8List.fromList(
         string.split('').map((e) => e.codeUnitAt(0)).toList(growable: false));
 
-    var number = 0;
+    BigInt number = BigInt.from(0);
 
-    number |= _alphabetValues[chars[0x00]] << 60;
-    number |= _alphabetValues[chars[0x01]] << 55;
-    number |= _alphabetValues[chars[0x02]] << 50;
-    number |= _alphabetValues[chars[0x03]] << 45;
-    number |= _alphabetValues[chars[0x04]] << 40;
-    number |= _alphabetValues[chars[0x05]] << 35;
-    number |= _alphabetValues[chars[0x06]] << 30;
-    number |= _alphabetValues[chars[0x07]] << 25;
-    number |= _alphabetValues[chars[0x08]] << 20;
-    number |= _alphabetValues[chars[0x09]] << 15;
-    number |= _alphabetValues[chars[0x0a]] << 10;
-    number |= _alphabetValues[chars[0x0b]] << 5;
-    number |= _alphabetValues[chars[0x0c]];
+    number |= BigInt.from(_alphabetValues[chars[0x00]]) << 60;
+    number |= BigInt.from(_alphabetValues[chars[0x01]]) << 55;
+    number |= BigInt.from(_alphabetValues[chars[0x02]]) << 50;
+    number |= BigInt.from(_alphabetValues[chars[0x03]]) << 45;
+    number |= BigInt.from(_alphabetValues[chars[0x04]]) << 40;
+    number |= BigInt.from(_alphabetValues[chars[0x05]]) << 35;
+    number |= BigInt.from(_alphabetValues[chars[0x06]]) << 30;
+    number |= BigInt.from(_alphabetValues[chars[0x07]]) << 25;
+    number |= BigInt.from(_alphabetValues[chars[0x08]]) << 20;
+    number |= BigInt.from(_alphabetValues[chars[0x09]]) << 15;
+    number |= BigInt.from(_alphabetValues[chars[0x0a]]) << 10;
+    number |= BigInt.from(_alphabetValues[chars[0x0b]]) << 5;
+    number |= BigInt.from(_alphabetValues[chars[0x0c]]);
 
-    return BigInt.from(number);
+    return number;
   }
 
   Tsid(final BigInt number) {
@@ -755,6 +756,7 @@ class Settings {
   static final String node = "tsidcreator.node";
   static final String nodeCount = "tsidcreator.node.count";
   static final Map<String, String> mockSettings = <String, String>{};
+
   static BigInt? getNode() {
     return getPropertyAsInt(node);
   }
