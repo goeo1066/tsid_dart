@@ -1,9 +1,19 @@
+import 'dart:io'; // Added for Platform.environment
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:tsid_dart/src/tsid_error.dart';
 import 'package:convert/convert.dart';
 
+/// Represents a Time-Sorted Unique Identifier (TSID).
+///
+/// TSIDs are 64-bit integers that are k-sortable (roughly time-ordered)
+/// and suitable for distributed generation.
+///
+/// The string representation of a TSID uses a fixed Crockford Base32-like alphabet
+/// (0-9, A-Z excluding I, L, O, U), where each character encodes 5 bits of the TSID's value.
+/// Internal methods like `_toString()` and `getNumberFromString()` are tightly coupled
+/// with this 13-character, 5-bits-per-character encoding.
 class Tsid {
   static const int _randomBits = 22;
   static const int _randomMask = 0x003fffff;
@@ -114,6 +124,21 @@ class Tsid {
     return bytes;
   }
 
+  /// Generates a new TSID quickly.
+  ///
+  /// This method aims for speed by using `DateTime.now().millisecondsSinceEpoch` for the time
+  /// component and a static, lazily initialized counter for the random component.
+  ///
+  /// **Collision Characteristics**:
+  /// Uniqueness for TSIDs generated within the same millisecond relies on an internal
+  /// incrementing counter (22 bits, allowing for 2^22 or approximately 4.19 million
+  /// unique values per millisecond per generating instance).
+  /// While collisions are statistically rare for most applications, extremely high burst rates
+  /// (e.g., significantly exceeding 4 million calls within the same millisecond on a single
+  /// generator instance) could theoretically lead to counter wrap-around and thus collisions.
+  /// For applications requiring stronger guarantees against collisions under such extreme
+  /// conditions, or across distributed nodes without careful node ID configuration,
+  /// consider using `TsidFactory`.
   static Tsid fast() {
     final time =
         (DateTime.now().millisecondsSinceEpoch - _tsidEpoch) << _randomBits;
@@ -204,8 +229,9 @@ class Tsid {
         throw TsidError("Invalid placeholder: \"%$placeholder\"");
     }
 
-    return '${format.length + longest}$format'
-        .replaceRange(i, i + 2, replacement);
+    // Corrected: Apply replaceRange to the original format string.
+    // The prepending of '${format.length + longest}$format' was a bug.
+    return format.replaceRange(i, i + 2, replacement);
   }
 
   static Tsid unformat(final String formatted, final String format) {
@@ -275,15 +301,15 @@ class Tsid {
     }
 
     for (int i = 0; i < runes.length; i++) {
-      try {
-        if (_alphabetValues[runes.elementAt(i)] == -1) {
-          return false;
-        }
-      } on IndexError {
+      int charCode = runes.elementAt(i);
+      // Check if charCode is out of bounds for _alphabetValues OR if the value at that index is -1 (invalid character)
+      if (charCode < 0 || charCode >= _alphabetValues.length || _alphabetValues[charCode] == -1) {
         return false;
       }
     }
 
+    // The first character of a valid TSID string must not have the 5th bit set (value < 16),
+    // as this would indicate an overflow when reconstructing the 64-bit number from 13 5-bit characters (65 bits).
     if ((_alphabetValues[runes.elementAt(0)] & 0x10) != 0) {
       return false; // overflow!
     }
@@ -350,7 +376,7 @@ class BaseN {
     }
 
     int x = 0;
-    int last = 0;
+    // int last = 0; // Not needed anymore
     int plus = 0;
 
     final int length = _length(base);
@@ -358,27 +384,28 @@ class BaseN {
       throw TsidError("Invalid base-$base length: ${string.length}");
     }
 
+    BigInt baseBigInt = BigInt.from(base);
+
     for (int i = 0; i < length; i++) {
-      plus = alphabet.indexOf(string.substring(i, i + 1)); // ???
+      plus = alphabet.indexOf(string.substring(i, i + 1));
       if (plus == -1) {
         throw TsidError(
-            "Invalid base-$base character: $string.substring(i, i + 1)");
+            "Invalid base-$base character: '${string.substring(i, i + 1)}'");
       }
 
-      last = x;
+      // Overflow check before updating x
+      BigInt currentXBigInt = BigInt.from(x);
+      BigInt plusBigInt = BigInt.from(plus);
+      if (currentXBigInt * baseBigInt + plusBigInt > max) {
+        throw TsidError(
+            "Invalid base-$base value (overflow) for string: '$string'");
+      }
+
+      // last = x; // Not needed anymore
       x = (x * base) + plus;
     }
 
-    ByteData buff = ByteData(8);
-    buff.setInt64(0, last);
-    Uint8List bytes = buff.buffer.asUint8List();
-    String bytesString = hex.encode(bytes);
-    BigInt lazt = BigInt.parse(bytesString, radix: 16);
-    BigInt baze = BigInt.from(base);
-    BigInt pluz = BigInt.from(plus);
-    if ((lazt * baze) + pluz > max) {
-      throw TsidError("Invalid base-$base value (overflow): $lazt");
-    }
+    // The old overflow check based on 'last' is removed as it's now handled iteratively.
 
     return Tsid(x);
   }
@@ -581,14 +608,23 @@ class TsidFactoryBuilder {
   }
 
   int get nodeBits {
-    if (Settings.getNodeCount() != null) {
-      _nodeBits = log(Settings.getNodeCount()!) ~/ log(2);
-    } else {
-      _nodeBits = TsidFactory._nodeBits1024;
+    int? nodeCount = Settings.getNodeCount();
+    if (nodeCount != null) {
+      if (nodeCount <= 0) {
+        throw TsidError(
+            "Node count from settings must be positive: $nodeCount");
+      }
+      // Calculate bits needed. log2(1) = 0. For nodeCount > 1, calculates floor(log2(nodeCount)).
+      // This correctly determines the minimum bits required.
+      // Note: log() in Dart is natural logarithm.
+      _nodeBits = (log(nodeCount) / log(2)).floor();
     }
+    // If nodeCount is null, _nodeBits retains its previously set value
+    // (either the default TsidFactory._nodeBits1024 or what was set by withNodeBits()).
 
     if (_nodeBits < 0 || _nodeBits > 20) {
-      throw TsidError("Node bits out of range [0, 20]: $_nodeBits");
+      throw TsidError(
+          "Node bits out of range [0, 20]: $_nodeBits (value may be from settings, withNodeBits(), or default)");
     }
 
     return _nodeBits;
@@ -696,23 +732,50 @@ class ByteRandom implements IRandom {
   }
 }
 
+/// Provides access to configuration settings for TSID generation.
+///
+/// On native platforms (e.g., server-side, CLI), this class reads settings
+/// from OS environment variables.
+/// On web platforms, a different mechanism (e.g., programmatic configuration
+/// via `Tsid.Settings.mockSettings` in `tsid_web.dart`, or build-time constants
+/// if `String.fromEnvironment` was used there) would apply.
 class Settings {
-  static final String node = "tsidcreator.node";
-  static final String nodeCount = "tsidcreator.node.count";
+  /// Environment variable name for configuring the node ID.
+  /// Example: `TSIDCREATOR_NODE=123`
+  static final String node = "TSIDCREATOR_NODE";
 
+  /// Environment variable name for configuring the node count (used to determine node bits).
+  /// Example: `TSIDCREATOR_NODE_COUNT=1024`
+  static final String nodeCount = "TSIDCREATOR_NODE_COUNT";
+
+  /// Retrieves the node ID configured for the TSID factory.
+  ///
+  /// On native platforms, this reads the OS environment variable specified by [Settings.node]
+  /// (e.g., 'TSIDCREATOR_NODE').
+  /// Returns `null` if the variable is not set or cannot be parsed as an integer.
   static int? getNode() {
     return getPropertyAsInt(node);
   }
 
+  /// Retrieves the node count configured for the TSID factory.
+  /// This value is used to calculate the number of bits for the node ID.
+  ///
+  /// On native platforms, this reads the OS environment variable specified by [Settings.nodeCount]
+  /// (e.g., 'TSIDCREATOR_NODE_COUNT').
+  /// Returns `null` if the variable is not set or cannot be parsed as an integer.
   static int? getNodeCount() {
     return getPropertyAsInt(nodeCount);
   }
 
-  static int? getPropertyAsInt(String property) {
+  /// Parses a property value as an integer.
+  /// Returns `null` if the property is not found, is null, or cannot be parsed as an integer.
+  static int? getPropertyAsInt(String propertyName) {
     try {
-      var value = getProperty(property);
-      if (value == null) {
-        throw FormatException("Invalid Number format.");
+      var value = getProperty(propertyName);
+      if (value == null || value.isEmpty) {
+        // isEmpty check handles cases where Platform.environment might return empty string
+        // which int.parse would also fail on.
+        return null;
       }
       return int.parse(value);
     } on FormatException {
@@ -720,12 +783,18 @@ class Settings {
     }
   }
 
+  /// Retrieves a configuration property value.
+  ///
+  /// On native platforms, this method reads from OS environment variables.
+  /// The lookup is case-sensitive, but by convention, environment variables
+  /// are often uppercase (e.g., 'TSIDCREATOR_NODE').
+  ///
+  /// Returns the environment variable's string value, or `null` if not found.
   static String? getProperty(String name) {
-    String property =
-        String.fromEnvironment(name.toUpperCase(), defaultValue: '');
-    if (property.isNotEmpty) {
-      return property;
-    }
-    return null;
+    // For native platforms, read from OS environment variables.
+    // No .toUpperCase() here as Platform.environment keys are case-sensitive
+    // and should match the exact name (e.g., "TSIDCREATOR_NODE").
+    // The static final fields 'node' and 'nodeCount' are already uppercase.
+    return Platform.environment[name];
   }
 }

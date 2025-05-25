@@ -4,6 +4,25 @@ import 'dart:typed_data';
 import 'package:tsid_dart/src/tsid_error.dart';
 import 'package:convert/convert.dart';
 
+/// Represents a Time-Sorted Unique Identifier (TSID) for web environments.
+///
+/// TSIDs are 64-bit integers that are k-sortable (roughly time-ordered)
+/// and suitable for distributed generation. This implementation uses `BigInt` internally
+/// to ensure full 64-bit precision.
+///
+/// **JavaScript Interoperability Note:**
+/// JavaScript's standard `Number` type has precision limitations for integers larger
+/// than `2^53 - 1`. While TSIDs are 64-bit, directly converting a large TSID's
+/// numerical value (e.g., from `toLong()`) to a JavaScript `Number` can result in
+/// precision loss.
+/// **It is strongly recommended to exchange TSID values with JavaScript environments
+/// as strings (using `Tsid.toString()` on the Dart side and `Tsid.fromString()`
+/// when receiving from JavaScript) to maintain full precision.**
+///
+/// The string representation of a TSID uses a fixed Crockford Base32-like alphabet
+/// (0-9, A-Z excluding I, L, O, U), where each character encodes 5 bits of the TSID's value.
+/// Internal methods like `_toString()` and `getNumberFromString()` are tightly coupled
+/// with this 13-character, 5-bits-per-character encoding.
 class Tsid {
   static final BigInt _randomBits = BigInt.from(22);
   static final BigInt _randomMask = BigInt.from(0x003fffff);
@@ -132,6 +151,21 @@ class Tsid {
     return bytes;
   }
 
+  /// Generates a new TSID quickly.
+  ///
+  /// This method aims for speed by using `DateTime.now().millisecondsSinceEpoch` for the time
+  /// component and a static, lazily initialized counter for the random component.
+  ///
+  /// **Collision Characteristics**:
+  /// Uniqueness for TSIDs generated within the same millisecond relies on an internal
+  /// incrementing counter (22 bits, allowing for 2^22 or approximately 4.19 million
+  /// unique values per millisecond per generating instance).
+  /// While collisions are statistically rare for most applications, extremely high burst rates
+  /// (e.g., significantly exceeding 4 million calls within the same millisecond on a single
+  /// generator instance) could theoretically lead to counter wrap-around and thus collisions.
+  /// For applications requiring stronger guarantees against collisions under such extreme
+  /// conditions, or across distributed nodes without careful node ID configuration,
+  /// consider using `TsidFactory`.
   static Tsid fast() {
     final time =
         BigInt.from(DateTime.now().millisecondsSinceEpoch) - _tsidEpoch <<
@@ -295,15 +329,15 @@ class Tsid {
     }
 
     for (int i = 0; i < runes.length; i++) {
-      try {
-        if (_alphabetValues[runes.elementAt(i)] == -1) {
-          return false;
-        }
-      } on IndexError {
+      int charCode = runes.elementAt(i);
+      // Check if charCode is out of bounds for _alphabetValues OR if the value at that index is -1 (invalid character)
+      if (charCode < 0 || charCode >= _alphabetValues.length || _alphabetValues[charCode] == -1) {
         return false;
       }
     }
 
+    // The first character of a valid TSID string must not have the 5th bit set (value < 16),
+    // as this would indicate an overflow when reconstructing the 64-bit number from 13 5-bit characters (65 bits).
     if ((_alphabetValues[runes.elementAt(0)] & 0x10) != 0) {
       return false; // overflow!
     }
