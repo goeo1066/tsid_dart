@@ -1,30 +1,23 @@
 import 'dart:typed_data';
 
-class Tsid {
-  static Uint8List initializeAlphabetValues() {
+interface class Tsid {
+  Tsid(final BigInt number) {
     throw Exception("Stub implementation");
   }
 
-  static int getNumberFromBytes(Uint8List bytes) {
+  Tsid.fromNumber(final BigInt number);
+
+  Tsid.fromBytes(Uint8List bytes);
+
+  Tsid.fromString(String string);
+
+  BigInt toLong() {
     throw Exception("Stub implementation");
   }
 
-  static int getNumberFromString(String string) {
+  int toInt() {
     throw Exception("Stub implementation");
   }
-
-  Tsid(final int number) {
-    throw Exception("Stub implementation");
-  }
-
-  Tsid.fromNumber(final int number) : this(number);
-
-  Tsid.fromBytes(Uint8List bytes) : this(getNumberFromBytes(bytes));
-
-  Tsid.fromString(String string) : this(getNumberFromString(string));
-
-  int toLong() {
-    throw Exception("Stub implementation");  }
 
   Uint8List toBytes() {
     throw Exception("Stub implementation");
@@ -36,19 +29,24 @@ class Tsid {
 
   @override
   String toString() {
-    throw Exception("Stub implementation");  }
+    throw Exception("Stub implementation");
+  }
 
   String toLowerCase() {
-    throw Exception("Stub implementation");  }
+    throw Exception("Stub implementation");
+  }
 
-  int getUnixMilliseconds(final int customEpoch) {
-    throw Exception("Stub implementation");  }
+  BigInt getUnixMilliseconds(final BigInt customEpoch) {
+    throw Exception("Stub implementation");
+  }
 
-  int getTime() {
-    throw Exception("Stub implementation");  }
+  BigInt getTime() {
+    throw Exception("Stub implementation");
+  }
 
-  int getRandom() {
-    throw Exception("Stub implementation");  }
+  BigInt getRandom() {
+    throw Exception("Stub implementation");
+  }
 
   static bool isValid(final String string) {
     throw Exception("Stub implementation");
@@ -85,7 +83,6 @@ class Tsid {
     throw Exception("Stub implementation");
   }
 
-
   factory Tsid.getTsid() {
     throw Exception("Stub implementation");
   }
@@ -109,5 +106,19 @@ class Tsid {
       return false;
     }
     return super.hashCode == other.hashCode;
+  }
+}
+
+interface class TsidFactory {
+  factory TsidFactory() {
+    throw Exception("Stub implementation");
+  }
+
+  factory TsidFactory.fromNode(BigInt node) {
+    throw Exception("Stub implementation");
+  }
+
+  Tsid create() {
+    throw Exception("Stub implementation");
   }
 }

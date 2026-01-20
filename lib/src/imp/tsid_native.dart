@@ -3,8 +3,9 @@ import 'dart:typed_data';
 
 import 'package:tsid_dart/src/tsid_error.dart';
 import 'package:convert/convert.dart';
+import 'tsid.dart' as tsid;
 
-class Tsid {
+class Tsid implements tsid.Tsid {
   static const int _randomBits = 22;
   static const int _randomMask = 0x003fffff;
 
@@ -85,7 +86,7 @@ class Tsid {
     _number = number;
   }
 
-  Tsid.fromNumber(final int number) : this(number);
+  Tsid.fromNumber(final BigInt number) : this(number.toInt());
 
   Tsid.fromBytes(Uint8List bytes) : this(getNumberFromBytes(bytes));
 
@@ -95,10 +96,12 @@ class Tsid {
     return _number;
   }
 
-  int toLong() {
-    return _number;
+  @override
+  BigInt toLong() {
+    return BigInt.from(_number);
   }
 
+  @override
   Uint8List toBytes() {
     final bytes = Uint8List(_tsidBytes);
 
@@ -126,20 +129,24 @@ class Tsid {
     return _toString(alphabetUppercase);
   }
 
+  @override
   String toLowerCase() {
     return _toString(_alphabetLowercase);
   }
 
-  int getUnixMilliseconds(final int customEpoch) {
+  @override
+  BigInt getUnixMilliseconds(final BigInt customEpoch) {
     return getTime() + customEpoch;
   }
 
-  int getTime() {
-    return _number >>> _randomBits;
+  @override
+  BigInt getTime() {
+    return BigInt.from(_number >>> _randomBits);
   }
 
-  int getRandom() {
-    return _number & _randomBits;
+  @override
+  BigInt getRandom() {
+    return BigInt.from(_number & _randomBits);
   }
 
   static bool isValid(final String string) {
@@ -149,7 +156,8 @@ class Tsid {
   @override
   int get hashCode => _number ^ _number >>> 32;
 
-  int compareTo(Tsid that) {
+  @override
+  int compareTo(covariant Tsid that) {
     final int min = 0x8000000000000000;
     final int a = _number + min;
     final int b = that._number + min;
@@ -163,6 +171,7 @@ class Tsid {
     return 0;
   }
 
+  @override
   String encode(final int base) {
     return BaseN.encode(this, base);
   }
@@ -171,6 +180,7 @@ class Tsid {
     return BaseN.decode(string, base);
   }
 
+  @override
   String format(final String format) {
     final int i = format.indexOf('%');
     if (i < 0 || i == format.length - 1) {
@@ -398,7 +408,7 @@ class _LazyHolder {
   }
 }
 
-class TsidFactory {
+class TsidFactory implements tsid.TsidFactory {
   late int _counter;
   late int _lastTime;
   late final int _node;
@@ -420,7 +430,8 @@ class TsidFactory {
 
   TsidFactory() : this.fromBuilder(builder());
 
-  TsidFactory.fromNode(int node) : this.fromBuilder(builder().withNode(node));
+  TsidFactory.fromNode(BigInt node)
+      : this.fromBuilder(builder().withNode(node.toInt()));
 
   TsidFactory.fromBuilder(TsidFactoryBuilder builder) {
     _customEpoch = builder.customEpoch;
@@ -463,17 +474,13 @@ class TsidFactory {
     return factory.build();
   }
 
+  @override
   Tsid create() {
-// lock.lock()
-    try {
-      final int time = getTime() << _randomBits;
-      final int node = _node << _counterBits;
-      final int counter = _counter & _counterMask;
+    final int time = getTime() << _randomBits;
+    final int node = _node << _counterBits;
+    final int counter = _counter & _counterMask;
 
-      return Tsid(time | node | counter);
-    } finally {
-// lock.unlock();
-    }
+    return Tsid(time | node | counter);
   }
 
   int getTime() {
@@ -517,7 +524,7 @@ class TsidFactory {
 class TsidFactoryBuilder {
   static final _tsidEpoch = Tsid._tsidEpoch;
   // error if removed
-  late int? _node = null;
+  int? _node;
   late int _nodeBits = TsidFactory._nodeBits1024;
   late int _customEpoch = _tsidEpoch;
   late IRandom _random = ByteRandom.fromRandom(Random.secure());
