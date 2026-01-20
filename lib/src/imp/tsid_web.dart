@@ -561,7 +561,7 @@ class TsidFactoryBuilder {
   static final _tsidEpoch = Tsid._tsidEpoch;
 
   // error if removed
-  late BigInt? _node;
+  BigInt? _node;
   late BigInt _nodeBits = TsidFactory._nodeBits1024;
   late BigInt _customEpoch = _tsidEpoch;
   late IRandom _random = ByteRandom.fromRandom(Random.secure());
