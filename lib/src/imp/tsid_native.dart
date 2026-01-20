@@ -399,9 +399,9 @@ class BaseN {
 }
 
 class _LazyHolder {
-  static const int maxInt = 0x7FFFFFFFFFFFFFFF;
+  static final int maxInt = double.maxFinite.toInt();
 
-  static int counter = Random().nextInt(maxInt);
+  static int counter = (Random().nextDouble() * maxInt).toInt();
 
   static int incrementAndGet() {
     return ++counter;
