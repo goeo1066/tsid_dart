@@ -3,10 +3,11 @@ import 'dart:typed_data';
 
 import 'package:tsid_dart/src/tsid_error.dart';
 import 'package:convert/convert.dart';
+import 'tsid.dart' as tsid;
 
-class Tsid {
-  static const int _randomBits = 22;
-  static const int _randomMask = 0x003fffff;
+class Tsid implements tsid.Tsid {
+  static final BigInt _randomBits = BigInt.from(22);
+  static final BigInt _randomMask = BigInt.from(0x003fffff);
 
   static final _alphabetValues = initializeAlphabetValues();
   static final alphabetUppercase =
@@ -16,7 +17,8 @@ class Tsid {
 
   static const _tsidBytes = 8;
   static const _tsidChars = 13;
-  static final _tsidEpoch = DateTime.utc(2020).millisecondsSinceEpoch;
+  static final _tsidEpoch =
+      BigInt.from(DateTime.utc(2020).millisecondsSinceEpoch);
 
   static Uint8List initializeAlphabetValues() {
     var values = Uint8List.fromList(List<int>.filled(256, -1));
@@ -38,85 +40,106 @@ class Tsid {
     return values;
   }
 
-  late final int _number;
+  late final BigInt _number;
 
-  static int getNumberFromBytes(Uint8List bytes) {
+  static BigInt getNumberFromBytes(Uint8List bytes) {
     if (bytes.length != _tsidBytes) {
       throw TsidError("Invalid Length of TSID Bytes");
     }
-    var number = 0;
+    BigInt number = BigInt.zero;
 
-    number |= (bytes[0x0] & 0xff) << 56;
-    number |= (bytes[0x1] & 0xff) << 48;
-    number |= (bytes[0x2] & 0xff) << 40;
-    number |= (bytes[0x3] & 0xff) << 32;
-    number |= (bytes[0x4] & 0xff) << 24;
-    number |= (bytes[0x5] & 0xff) << 16;
-    number |= (bytes[0x6] & 0xff) << 8;
-    number |= (bytes[0x7] & 0xff);
+    number |= BigInt.from(bytes[0x0] & 0xff) << 56;
+    number |= BigInt.from(bytes[0x1] & 0xff) << 48;
+    number |= BigInt.from(bytes[0x2] & 0xff) << 40;
+    number |= BigInt.from(bytes[0x3] & 0xff) << 32;
+    number |= BigInt.from(bytes[0x4] & 0xff) << 24;
+    number |= BigInt.from(bytes[0x5] & 0xff) << 16;
+    number |= BigInt.from(bytes[0x6] & 0xff) << 8;
+    number |= BigInt.from(bytes[0x7] & 0xff);
 
     return number;
   }
 
-  static int getNumberFromString(String string) {
+  static BigInt getNumberFromString(String string) {
     Uint8List chars = Uint8List.fromList(
         string.split('').map((e) => e.codeUnitAt(0)).toList(growable: false));
 
-    var number = 0;
+    BigInt number = BigInt.zero;
 
-    number |= _alphabetValues[chars[0x00]] << 60;
-    number |= _alphabetValues[chars[0x01]] << 55;
-    number |= _alphabetValues[chars[0x02]] << 50;
-    number |= _alphabetValues[chars[0x03]] << 45;
-    number |= _alphabetValues[chars[0x04]] << 40;
-    number |= _alphabetValues[chars[0x05]] << 35;
-    number |= _alphabetValues[chars[0x06]] << 30;
-    number |= _alphabetValues[chars[0x07]] << 25;
-    number |= _alphabetValues[chars[0x08]] << 20;
-    number |= _alphabetValues[chars[0x09]] << 15;
-    number |= _alphabetValues[chars[0x0a]] << 10;
-    number |= _alphabetValues[chars[0x0b]] << 5;
-    number |= _alphabetValues[chars[0x0c]];
+    number |= BigInt.from(_alphabetValues[chars[0x00]]) << 60;
+    number |= BigInt.from(_alphabetValues[chars[0x01]]) << 55;
+    number |= BigInt.from(_alphabetValues[chars[0x02]]) << 50;
+    number |= BigInt.from(_alphabetValues[chars[0x03]]) << 45;
+    number |= BigInt.from(_alphabetValues[chars[0x04]]) << 40;
+    number |= BigInt.from(_alphabetValues[chars[0x05]]) << 35;
+    number |= BigInt.from(_alphabetValues[chars[0x06]]) << 30;
+    number |= BigInt.from(_alphabetValues[chars[0x07]]) << 25;
+    number |= BigInt.from(_alphabetValues[chars[0x08]]) << 20;
+    number |= BigInt.from(_alphabetValues[chars[0x09]]) << 15;
+    number |= BigInt.from(_alphabetValues[chars[0x0a]]) << 10;
+    number |= BigInt.from(_alphabetValues[chars[0x0b]]) << 5;
+    number |= BigInt.from(_alphabetValues[chars[0x0c]]);
 
     return number;
   }
 
-  Tsid(final int number) {
+  Tsid(final BigInt number) {
     _number = number;
   }
 
-  Tsid.fromNumber(final int number) : this(number);
+  Tsid.fromNumber(final BigInt number) : this(number);
 
   Tsid.fromBytes(Uint8List bytes) : this(getNumberFromBytes(bytes));
 
   Tsid.fromString(String string) : this(getNumberFromString(string));
 
+  @override
   int toInt() {
+    throw UnsupportedError(
+        "toInt() is not supported on web. Use toLong() instead.");
+  }
+
+  @override
+  BigInt toLong() {
     return _number;
   }
 
-  int toLong() {
-    return _number;
-  }
-
+  @override
   Uint8List toBytes() {
     final bytes = Uint8List(_tsidBytes);
 
-    bytes[0x0] = (_number >>> 56);
-    bytes[0x1] = (_number >>> 48);
-    bytes[0x2] = (_number >>> 40);
-    bytes[0x3] = (_number >>> 32);
-    bytes[0x4] = (_number >>> 24);
-    bytes[0x5] = (_number >>> 16);
-    bytes[0x6] = (_number >>> 8);
-    bytes[0x7] = (_number);
+    bytes[0x0] =
+        (_number & BigInt.parse('0xFF00000000000000', radix: 16) >> 8 * 7)
+            .toInt();
+    bytes[0x1] =
+        (_number & BigInt.parse('0x00FF000000000000', radix: 16) >> 8 * 6)
+            .toInt();
+    bytes[0x2] =
+        (_number & BigInt.parse('0x0000FF0000000000', radix: 16) >> 8 * 5)
+            .toInt();
+    bytes[0x3] =
+        (_number & BigInt.parse('0x000000FF00000000', radix: 16) >> 8 * 4)
+            .toInt();
+    bytes[0x4] =
+        (_number & BigInt.parse('0x00000000FF000000', radix: 16) >> 8 * 3)
+            .toInt();
+    bytes[0x5] =
+        (_number & BigInt.parse('0x0000000000FF0000', radix: 16) >> 8 * 2)
+            .toInt();
+    bytes[0x6] =
+        (_number & BigInt.parse('0x000000000000FF00', radix: 16) >> 8 * 1)
+            .toInt();
+    bytes[0x7] =
+        (_number & BigInt.parse('0x00000000000000FF', radix: 16) >> 8 * 0)
+            .toInt();
 
     return bytes;
   }
 
   static Tsid fast() {
     final time =
-        (DateTime.now().millisecondsSinceEpoch - _tsidEpoch) << _randomBits;
+        BigInt.from(DateTime.now().millisecondsSinceEpoch) - _tsidEpoch <<
+            _randomBits.toInt();
     final tail = _LazyHolder.incrementAndGet() & _randomMask;
     return Tsid(time | tail);
   }
@@ -126,19 +149,23 @@ class Tsid {
     return _toString(alphabetUppercase);
   }
 
+  @override
   String toLowerCase() {
     return _toString(_alphabetLowercase);
   }
 
-  int getUnixMilliseconds(final int customEpoch) {
+  @override
+  BigInt getUnixMilliseconds(final BigInt customEpoch) {
     return getTime() + customEpoch;
   }
 
-  int getTime() {
-    return _number >>> _randomBits;
+  @override
+  BigInt getTime() {
+    return _number >> _randomBits.toInt();
   }
 
-  int getRandom() {
+  @override
+  BigInt getRandom() {
     return _number & _randomBits;
   }
 
@@ -147,12 +174,13 @@ class Tsid {
   }
 
   @override
-  int get hashCode => _number ^ _number >>> 32;
+  int get hashCode => ((_number ^ _number) >> 32).toInt();
 
-  int compareTo(Tsid that) {
-    final int min = 0x8000000000000000;
-    final int a = _number + min;
-    final int b = that._number + min;
+  @override
+  int compareTo(covariant Tsid that) {
+    final BigInt min = BigInt.from(0x8000000000000000);
+    final BigInt a = _number + min;
+    final BigInt b = that._number + min;
 
     if (a > b) {
       return 1;
@@ -163,6 +191,7 @@ class Tsid {
     return 0;
   }
 
+  @override
   String encode(final int base) {
     return BaseN.encode(this, base);
   }
@@ -171,6 +200,7 @@ class Tsid {
     return BaseN.decode(string, base);
   }
 
+  @override
   String format(final String format) {
     final int i = format.indexOf('%');
     if (i < 0 || i == format.length - 1) {
@@ -244,19 +274,20 @@ class Tsid {
 
   String _toString(final List<int> alphabet) {
     final Uint8List chars = Uint8List(_tsidChars);
-    chars[0x00] = alphabet[((_number >>> 60) & 0x1F)];
-    chars[0x01] = alphabet[((_number >>> 55) & 0x1F)];
-    chars[0x02] = alphabet[((_number >>> 50) & 0x1F)];
-    chars[0x03] = alphabet[((_number >>> 45) & 0x1F)];
-    chars[0x04] = alphabet[((_number >>> 40) & 0x1F)];
-    chars[0x05] = alphabet[((_number >>> 35) & 0x1F)];
-    chars[0x06] = alphabet[((_number >>> 30) & 0x1F)];
-    chars[0x07] = alphabet[((_number >>> 25) & 0x1F)];
-    chars[0x08] = alphabet[((_number >>> 20) & 0x1F)];
-    chars[0x09] = alphabet[((_number >>> 15) & 0x1F)];
-    chars[0x0a] = alphabet[((_number >>> 10) & 0x1F)];
-    chars[0x0b] = alphabet[((_number >>> 5) & 0x1F)];
-    chars[0x0c] = alphabet[(_number & 0x1F)];
+    BigInt ander = BigInt.from(0x1F);
+    chars[0x00] = alphabet[((_number >> 60) & ander).toInt()];
+    chars[0x01] = alphabet[((_number >> 55) & ander).toInt()];
+    chars[0x02] = alphabet[((_number >> 50) & ander).toInt()];
+    chars[0x03] = alphabet[((_number >> 45) & ander).toInt()];
+    chars[0x04] = alphabet[((_number >> 40) & ander).toInt()];
+    chars[0x05] = alphabet[((_number >> 35) & ander).toInt()];
+    chars[0x06] = alphabet[((_number >> 30) & ander).toInt()];
+    chars[0x07] = alphabet[((_number >> 25) & ander).toInt()];
+    chars[0x08] = alphabet[((_number >> 20) & ander).toInt()];
+    chars[0x09] = alphabet[((_number >> 15) & ander).toInt()];
+    chars[0x0a] = alphabet[((_number >> 10) & ander).toInt()];
+    chars[0x0b] = alphabet[((_number >> 5) & ander).toInt()];
+    chars[0x0c] = alphabet[(_number & ander).toInt()];
 
     return String.fromCharCodes(chars);
   }
@@ -326,8 +357,8 @@ class BaseN {
       throw TsidError("Invalid base: $base");
     }
 
-    BigInt baseBigInt = BigInt.from(base).toUnsigned(64);
-    BigInt x = BigInt.from(tsid._number).toUnsigned(64);
+    BigInt baseBigInt = BigInt.from(base);
+    BigInt x = tsid._number;
     int b = _length(base);
     Uint8List buffer = Uint8List(b);
 
@@ -380,7 +411,7 @@ class BaseN {
       throw TsidError("Invalid base-$base value (overflow): $lazt");
     }
 
-    return Tsid(x);
+    return Tsid(BigInt.from(x));
   }
 
   static int _length(int base) {
@@ -389,38 +420,53 @@ class BaseN {
 }
 
 class _LazyHolder {
-  static const int maxInt = 0x7FFFFFFFFFFFFFFF;
+  static final BigInt maxInt = BigInt.parse("0x7FFFFFFFFFFFFFFF", radix: 16);
+  static const int maxIntUpper = 0x7FFF;
+  static const int maxIntLower = 0xFFFFFFFFFFFF;
+  static const int maxIntLowerSizeInBits = 6 * 8;
 
-  static int counter = Random().nextInt(maxInt);
+  // static const int maxInt = 0x7FFFFFFFFFFFFFFF;
 
-  static int incrementAndGet() {
-    return ++counter;
+  static BigInt _counter = BigInt.zero;
+
+  static BigInt incrementAndGet() {
+    final result = _counter;
+    _counter = _counter + BigInt.one;
+    return result;
+  }
+
+  static BigInt randomNextInt(BigInt bound) {
+    final random = Random();
+    final bigInt =
+        BigInt.from(random.nextInt(maxIntUpper)) << maxIntLowerSizeInBits;
+    return bigInt + BigInt.from(random.nextInt(maxIntLower));
   }
 }
 
-class TsidFactory {
-  late int _counter;
-  late int _lastTime;
-  late final int _node;
-  late final int _nodeBits;
-  late final int _nodeMask;
-  late final int _counterBits;
-  late final int _counterMask;
-  late final int _customEpoch;
-  late final int Function() _timeFunction;
+class TsidFactory implements tsid.TsidFactory {
+  late BigInt _counter;
+  late BigInt _lastTime;
+  late final BigInt _node;
+  late final BigInt _nodeBits;
+  late final BigInt _nodeMask;
+  late final BigInt _counterBits;
+  late final BigInt _counterMask;
+  late final BigInt _customEpoch;
+  late final BigInt Function() _timeFunction;
   late final IRandom _random;
-  late final int _randomBytes;
+  late final BigInt _randomBytes;
 
-  static final int _randomBits = Tsid._randomBits;
-  static final int _randomMask = Tsid._randomMask;
+  static final BigInt _randomBits = Tsid._randomBits;
+  static final BigInt _randomMask = Tsid._randomMask;
 
-  static final int _nodeBits256 = 8;
-  static final int _nodeBits1024 = 10;
-  static final int _nodeBits4096 = 12;
+  static final BigInt _nodeBits256 = BigInt.from(8);
+  static final BigInt _nodeBits1024 = BigInt.from(10);
+  static final BigInt _nodeBits4096 = BigInt.from(12);
 
   TsidFactory() : this.fromBuilder(builder());
 
-  TsidFactory.fromNode(int node) : this.fromBuilder(builder().withNode(node));
+  TsidFactory.fromNode(BigInt node)
+      : this.fromBuilder(builder().withNode(node));
 
   TsidFactory.fromBuilder(TsidFactoryBuilder builder) {
     _customEpoch = builder.customEpoch;
@@ -429,17 +475,17 @@ class TsidFactory {
     _timeFunction = builder.timeFunction;
 
     _counterBits = _randomBits - _nodeBits;
-    _counterMask = _randomMask >>> _nodeBits;
-    _nodeMask = _randomMask >>> _counterBits;
+    _counterMask = _randomMask >> _nodeBits.toInt();
+    _nodeMask = _randomMask >> _counterBits.toInt();
 
-    _randomBytes = ((_counterBits - 1) ~/ 8) + 1;
+    _randomBytes = ((_counterBits - BigInt.one) ~/ BigInt.from(8)) + BigInt.one;
 
     _node = builder.node & _nodeMask;
-    _lastTime = 0; // 1970-01-01
+    _lastTime = BigInt.zero; // 1970-01-01
     _counter = _getRandomCounter();
   }
 
-  factory TsidFactory.newInstance256({int? node}) {
+  factory TsidFactory.newInstance256({BigInt? node}) {
     var factory = TsidFactory.builder().withNodeBits(_nodeBits256);
     if (node != null) {
       factory = factory.withNode(node);
@@ -447,7 +493,7 @@ class TsidFactory {
     return factory.build();
   }
 
-  factory TsidFactory.newInstance1024({int? node}) {
+  factory TsidFactory.newInstance1024({BigInt? node}) {
     var factory = TsidFactory.builder().withNodeBits(_nodeBits1024);
     if (node != null) {
       factory = factory.withNode(node);
@@ -455,7 +501,7 @@ class TsidFactory {
     return factory.build();
   }
 
-  factory TsidFactory.newInstance4096({int? node}) {
+  factory TsidFactory.newInstance4096({BigInt? node}) {
     var factory = TsidFactory.builder().withNodeBits(_nodeBits4096);
     if (node != null) {
       factory = factory.withNode(node);
@@ -463,24 +509,20 @@ class TsidFactory {
     return factory.build();
   }
 
+  @override
   Tsid create() {
-// lock.lock()
-    try {
-      final int time = getTime() << _randomBits;
-      final int node = _node << _counterBits;
-      final int counter = _counter & _counterMask;
+    final BigInt time = getTime() << _randomBits.toInt();
+    final BigInt node = _node << _counterBits.toInt();
+    final BigInt counter = _counter & _counterMask;
 
-      return Tsid(time | node | counter);
-    } finally {
-// lock.unlock();
-    }
+    return Tsid(time | node | counter);
   }
 
-  int getTime() {
-    int time = _timeFunction();
+  BigInt getTime() {
+    BigInt time = _timeFunction();
     if (time <= _lastTime) {
-      _counter++;
-      int carry = _counter >>> _counterBits;
+      _counter = _counter + BigInt.one;
+      BigInt carry = _counter >> _counterBits.toInt();
       _counter = _counter & _counterMask;
       time = _lastTime + carry;
     } else {
@@ -490,16 +532,17 @@ class TsidFactory {
     return time - _customEpoch;
   }
 
-  int _getRandomCounter() {
+  BigInt _getRandomCounter() {
     if (_random is ByteRandom) {
-      final Uint8List bytes = _random.nextBytes(_randomBytes);
+      final Uint8List bytes = _random.nextBytes(_randomBytes.toInt());
       switch (bytes.length) {
         case 1:
-          return (bytes[0] & 0xFF) & _counterMask;
+          return BigInt.from(bytes[0] & 0xFF) & _counterMask;
         case 2:
-          return (((bytes[0] & 0xFF) << 8) | (bytes[1] & 0xFF)) & _counterMask;
+          return BigInt.from(((bytes[0] & 0xFF) << 8) | (bytes[1] & 0xFF)) &
+              _counterMask;
         default:
-          return (((bytes[0] & 0xff) << 16) |
+          return BigInt.from(((bytes[0] & 0xff) << 16) |
                   ((bytes[1] & 0xff) << 8) |
                   (bytes[2] & 0xff)) &
               _counterMask;
@@ -516,25 +559,26 @@ class TsidFactory {
 
 class TsidFactoryBuilder {
   static final _tsidEpoch = Tsid._tsidEpoch;
-  // error if removed
-  late int? _node = null;
-  late int _nodeBits = TsidFactory._nodeBits1024;
-  late int _customEpoch = _tsidEpoch;
-  late IRandom _random = ByteRandom.fromRandom(Random.secure());
-  late int Function() _timeFunction =
-      () => DateTime.now().millisecondsSinceEpoch;
 
-  TsidFactoryBuilder withNode(int node) {
+  // error if removed
+  BigInt? _node;
+  late BigInt _nodeBits = TsidFactory._nodeBits1024;
+  late BigInt _customEpoch = _tsidEpoch;
+  late IRandom _random = ByteRandom.fromRandom(Random.secure());
+  late BigInt Function() _timeFunction =
+      () => BigInt.from(DateTime.now().millisecondsSinceEpoch);
+
+  TsidFactoryBuilder withNode(BigInt node) {
     _node = node;
     return this;
   }
 
-  TsidFactoryBuilder withNodeBits(int nodeBits) {
+  TsidFactoryBuilder withNodeBits(BigInt nodeBits) {
     _nodeBits = nodeBits;
     return this;
   }
 
-  TsidFactoryBuilder withCustomEpoch(int epoch) {
+  TsidFactoryBuilder withCustomEpoch(BigInt epoch) {
     _customEpoch = epoch;
     return this;
   }
@@ -548,7 +592,7 @@ class TsidFactoryBuilder {
     return this;
   }
 
-  TsidFactoryBuilder withIntRandomFunction(int Function() randomFunction) {
+  TsidFactoryBuilder withIntRandomFunction(BigInt Function() randomFunction) {
     _random = IntRandom.fromRandomFunction(randomFunction);
     return this;
   }
@@ -559,17 +603,17 @@ class TsidFactoryBuilder {
   }
 
   TsidFactoryBuilder withDateTime(DateTime dateTime) {
-    _timeFunction = () => dateTime.millisecond;
+    _timeFunction = () => BigInt.from(dateTime.millisecond);
     return this;
   }
 
-  TsidFactoryBuilder withTimeFunction(int Function() timeFunction) {
+  TsidFactoryBuilder withTimeFunction(BigInt Function() timeFunction) {
     _timeFunction = timeFunction;
     return this;
   }
 
-  int get node {
-    final int max = (1 << _nodeBits) - 1;
+  BigInt get node {
+    final BigInt max = BigInt.from((1 << _nodeBits.toInt()) - 1);
     if (_node == null) {
       if (Settings.getNode() != null) {
         _node = Settings.getNode()!;
@@ -580,21 +624,22 @@ class TsidFactoryBuilder {
     return _node!;
   }
 
-  int get nodeBits {
+  BigInt get nodeBits {
     if (Settings.getNodeCount() != null) {
-      _nodeBits = log(Settings.getNodeCount()!) ~/ log(2);
+      _nodeBits =
+          BigInt.from(log(Settings.getNodeCount()!.toDouble()) ~/ log(2));
     } else {
       _nodeBits = TsidFactory._nodeBits1024;
     }
 
-    if (_nodeBits < 0 || _nodeBits > 20) {
+    if (_nodeBits.toInt() < 0 || _nodeBits.toInt() > 20) {
       throw TsidError("Node bits out of range [0, 20]: $_nodeBits");
     }
 
     return _nodeBits;
   }
 
-  int get customEpoch {
+  BigInt get customEpoch {
     return _customEpoch;
   }
 
@@ -602,7 +647,7 @@ class TsidFactoryBuilder {
     return _random;
   }
 
-  int Function() get timeFunction {
+  BigInt Function() get timeFunction {
     return _timeFunction;
   }
 
@@ -612,47 +657,47 @@ class TsidFactoryBuilder {
 }
 
 abstract interface class IRandom {
-  int nextInt();
+  BigInt nextInt();
 
   Uint8List nextBytes(int length);
 }
 
 class IntRandom implements IRandom {
-  late final int Function() _randomFunction;
+  late final BigInt Function() _randomFunction;
 
   IntRandom() : this.fromRandom(Random.secure());
 
   IntRandom.fromRandom(Random random)
       : this.fromRandomFunction(newRandomFunction(random));
 
-  IntRandom.fromRandomFunction(int Function() randomFunction) {
+  IntRandom.fromRandomFunction(BigInt Function() randomFunction) {
     _randomFunction = randomFunction;
   }
 
-  static int Function() newRandomFunction(Random random) {
+  static BigInt Function() newRandomFunction(Random random) {
     return () {
-      return random.nextInt(_LazyHolder.maxInt);
+      return _LazyHolder.randomNextInt(_LazyHolder.maxInt);
     };
   }
 
   @override
   Uint8List nextBytes(int length) {
-    int shift = 0;
-    int random = 0;
+    BigInt shift = BigInt.zero;
+    BigInt random = BigInt.zero;
     Uint8List bytes = Uint8List(length);
     for (int i = 0; i < length; i++) {
-      if (shift < 8 /* Byte.SIZE */) {
-        shift = 32; /* Integer.SIZE*/
+      if (shift < BigInt.from(8) /* Byte.SIZE */) {
+        shift = BigInt.from(32); /* Integer.SIZE*/
         random = _randomFunction();
       }
-      shift -= 8; /* Byte.SIZE */
-      bytes[i] = random >>> shift;
+      shift -= BigInt.from(8); /* Byte.SIZE */
+      bytes[i] = (random >> shift.toInt()).toInt();
     }
     return bytes;
   }
 
   @override
-  int nextInt() {
+  BigInt nextInt() {
     return _randomFunction();
   }
 }
@@ -685,12 +730,12 @@ class ByteRandom implements IRandom {
   }
 
   @override
-  int nextInt() {
-    int number = 0;
+  BigInt nextInt() {
+    BigInt number = BigInt.zero;
     Uint8List bytes = _randomFunction(4);
 /* Integer.BYTES */
     for (int i = 0; i < 4 /* Integer.BYTES */; i++) {
-      number = (number << 8) | (bytes[i] & 0xff);
+      number = (number << 8) | BigInt.from(bytes[i] & 0xff);
     }
     return number;
   }
@@ -699,30 +744,29 @@ class ByteRandom implements IRandom {
 class Settings {
   static final String node = "tsidcreator.node";
   static final String nodeCount = "tsidcreator.node.count";
-
-  static int? getNode() {
+  static final Map<String, String> mockSettings = <String, String>{};
+  static BigInt? getNode() {
     return getPropertyAsInt(node);
   }
 
-  static int? getNodeCount() {
+  static BigInt? getNodeCount() {
     return getPropertyAsInt(nodeCount);
   }
 
-  static int? getPropertyAsInt(String property) {
+  static BigInt? getPropertyAsInt(String property) {
     try {
       var value = getProperty(property);
       if (value == null) {
         throw FormatException("Invalid Number format.");
       }
-      return int.parse(value);
+      return BigInt.parse(value);
     } on FormatException {
       return null;
     }
   }
 
   static String? getProperty(String name) {
-    String property =
-        String.fromEnvironment(name.toUpperCase(), defaultValue: '');
+    String property = mockSettings[name] ?? '';
     if (property.isNotEmpty) {
       return property;
     }
