@@ -1,6 +1,6 @@
 name: tsid_dart
 description: A TSID Port for Dart libraries or applications. it probably possible to run on any platform, however it was tested on macos and web only.
-version: 0.1.1
+version: 0.1.2
 repository: https://github.com/goeo1066/tsid_dart
 
 environment:

@@ -1,117 +1,113 @@
-import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:collection/collection.dart';
-import 'package:tsid_dart/tsid_dart.dart';
 import 'package:test/test.dart';
+import 'package:tsid_dart/tsid_dart.dart';
 
-final int timeBits = 42;
-final int randomBits = 22;
-final int loopMax = 1000;
-final int maxLong = 4294967296;
-final Runes alphabetCrockford = "0123456789ABCDEFGHJKMNPQRSTVWXYZ".runes;
-final Runes alphabetJava =
-    "0123456789abcdefghijklmnopqrstuv".runes; // Long.parseUnsignedLong()
+BigInt _big(String value) => BigInt.parse(value);
+
+Uint8List _toBytes(BigInt value) {
+  final bytes = Uint8List(8);
+  for (var i = 0; i < 8; i++) {
+    bytes[i] = ((value >> (56 - (i * 8))) & BigInt.from(0xff)).toInt();
+  }
+  return bytes;
+}
 
 void main() {
-  group('TSID Test', () {
-    test('testFromBytes', () {
-      for (int i = 0; i < loopMax; i++) {
-        final int number0 = Random().nextInt(maxLong);
+  group('Tsid', () {
+    test('round-trips unsigned 64-bit values via bytes', () {
+      final values = <BigInt>[
+        BigInt.zero,
+        BigInt.one,
+        _big('4294967295'),
+        _big('9223372036854775807'),
+        _big('9223372036854775808'),
+        _big('18446744073709551615'),
+      ];
 
-        final ByteData buffer = ByteData(8);
+      for (final value in values) {
+        final bytes = _toBytes(value);
+        final tsid = Tsid.fromBytes(bytes);
 
-        buffer.setInt64(0, number0);
-
-        final Uint8List bytes = buffer.buffer.asUint8List();
-
-        final int number1 = Tsid.fromBytes(bytes).toInt();
-
-        assert(number0 == number1);
+        expect(tsid.toLong(), equals(value));
+        expect(tsid.toBytes(), equals(bytes));
       }
     });
 
-    test('testToBytes', () {
-      for (int i = 0; i < loopMax; i++) {
-        final int number = Random().nextInt(maxLong);
-        final ByteData buffer = ByteData(8);
-        buffer.setInt64(0, number);
-        Uint8List bytes0 = buffer.buffer.asUint8List();
+    test('round-trips canonical strings including max unsigned value', () {
+      const min = '0000000000000';
+      const maxSigned = '7ZZZZZZZZZZZZ';
+      const maxUnsigned = 'FZZZZZZZZZZZZ';
 
-        final String string0 = toString(number);
-        Uint8List bytes1 = Tsid.fromString(string0).toBytes();
-
-        assert(ListEquality().equals(bytes0, bytes1));
-      }
+      expect(Tsid.fromString(min).toString(), equals(min));
+      expect(Tsid.fromString(maxSigned).toString(), equals(maxSigned));
+      expect(Tsid.fromString(maxUnsigned).toString(), equals(maxUnsigned));
+      expect(
+        Tsid.fromString(maxUnsigned).toLong(),
+        equals(_big('18446744073709551615')),
+      );
     });
 
-    test('testFromString', () {
-      for (int i = 0; i < loopMax; i++) {
-        final int number0 = Random().nextInt(maxLong);
-        final String string0 = toString(number0);
-        final int number1 = Tsid.fromString(string0).toInt();
-        assert(number0 == number1);
-      }
+    test('rejects invalid TSID strings', () {
+      expect(Tsid.isValid('!!!!!!!!!!!!!'), isFalse);
+      expect(Tsid.isValid('short'), isFalse);
+      expect(() => Tsid.fromString('!!!!!!!!!!!!!'), throwsA(isA<TsidError>()));
+      expect(() => Tsid.fromString('short'), throwsA(isA<TsidError>()));
     });
 
-    test('testToString', () {
-      for (int i = 0; i < loopMax; i++) {
-        final int number = Random().nextInt(maxLong);
-
-        final String string0 = toString(number);
-
-        final String string1 = Tsid.fromNumber(BigInt.from(number)).toString();
-
-        assert(string0 == string1);
-      }
+    test('getRandom returns full 22-bit random component', () {
+      final tsid = Tsid.fromNumber(BigInt.from(31));
+      expect(tsid.getRandom(), equals(BigInt.from(31)));
     });
 
-    group('Operator ==', () {
-      test('equal number', () {
-        for (int i = 0; i < loopMax; i++) {
-          final int number = Random().nextInt(maxLong);
-          final Tsid tsid1 = Tsid.fromNumber(BigInt.from(number));
-          final Tsid tsid2 = Tsid.fromNumber(BigInt.from(number));
-          assert(tsid1 == tsid2);
-        }
-      });
+    test('format placeholders are replaced correctly', () {
+      final tsid = Tsid.fromString('0AXS751X00W7R');
+      expect(tsid.format('ID-%S'), equals('ID-${tsid.toString()}'));
+      expect(tsid.format('ID-%s'), equals('ID-${tsid.toLowerCase()}'));
+      expect(tsid.format('ID-%X'), equals('ID-${tsid.encode(16)}'));
+      expect(
+          tsid.format('ID-%x'), equals('ID-${tsid.encode(16).toLowerCase()}'));
+      expect(tsid.format('ID-%d'), equals('ID-${tsid.encode(10)}'));
+      expect(tsid.format('ID-%z'), equals('ID-${tsid.encode(62)}'));
+    });
 
-      test('different number', () {
-        for (int i = 0; i < loopMax; i++) {
-          final int number1 = Random().nextInt(maxLong);
-          final int number2 = Random().nextInt(maxLong);
-          final Tsid tsid1 = Tsid.fromNumber(BigInt.from(number1));
-          final Tsid tsid2 = Tsid.fromNumber(BigInt.from(number2));
-          assert(tsid1 != tsid2);
-        }
-      });
+    test('base encoding lengths and decode validation are correct', () {
+      final tsid = Tsid.fromNumber(BigInt.one);
+
+      expect(tsid.encode(10).length, equals(20));
+      expect(tsid.encode(62).length, equals(11));
+      expect(Tsid.decode(tsid.encode(10), 10).toLong(), equals(BigInt.one));
+      expect(Tsid.decode(tsid.encode(62), 62).toLong(), equals(BigInt.one));
+
+      expect(
+        () => Tsid.decode('0000000000000000000A', 10),
+        throwsA(isA<TsidError>()),
+      );
+    });
+
+    test('operator == and hashCode are value-based', () {
+      final a = Tsid.fromString('0AXS751X00W7R');
+      final b = Tsid.fromString('0AXS751X00W7R');
+      final c = Tsid.fromString('0AXS751X00W7S');
+
+      expect(a == b, isTrue);
+      expect(a == c, isFalse);
+      expect(a.hashCode, equals(b.hashCode));
+      expect(a.hashCode, isNot(equals(0)));
+    });
+
+    test('factory variants are available', () {
+      expect(Tsid.getTsid().toString().length, equals(13));
+      expect(Tsid.getTsid256().toString().length, equals(13));
+      expect(Tsid.getTsid1024().toString().length, equals(13));
+      expect(Tsid.getTsid4096().toString().length, equals(13));
+    });
+
+    test('unformat reverses format', () {
+      final tsid = Tsid.getTsid1024();
+      final formatted = tsid.format('A-%S-Z');
+      final parsed = Tsid.unformat(formatted, 'A-%S-Z');
+      expect(parsed, equals(tsid));
     });
   });
-}
-
-int fromString(String tsid) {
-  var number = tsid.substring(0, 10);
-  number = transliterate(number, alphabetCrockford, alphabetJava);
-  return int.parse(number, radix: 32);
-}
-
-String toString(int stid) {
-  final zero = "0000000000000";
-  String number = stid.toUnsigned(64).toRadixString(32);
-  number = zero.substring(0, zero.length - number.length) + number;
-
-  return transliterate(number, alphabetJava, alphabetCrockford);
-}
-
-String transliterate(String string, Runes alphabet1, Runes alphabet2) {
-  List<int> output = List.of(string.codeUnits);
-  for (int i = 0; i < output.length; i++) {
-    for (int j = 0; j < alphabet1.length; j++) {
-      if (output.elementAt(i) == alphabet1.elementAt(j)) {
-        output[i] = alphabet2.elementAt(j);
-        break;
-      }
-    }
-  }
-  return String.fromCharCodes(output);
 }

@@ -25,6 +25,6 @@ var string = Tsid.getTsid().toString();
 # pubspec.yaml
 ...
 dependencies:
-  tsid_dart: ^0.0.2
+  tsid_dart: ^0.1.2
 ...
 ```

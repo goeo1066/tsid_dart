@@ -1,8 +1,8 @@
 import 'dart:typed_data' show Uint8List;
 
 import 'imp/tsid.dart'
-if (dart.library.io) 'imp/tsid_native.dart'
-if (dart.library.js_interop) 'imp/tsid_web.dart' as tsid;
+    if (dart.library.io) 'imp/tsid_native.dart'
+    if (dart.library.js_interop) 'imp/tsid_web.dart' as tsid;
 
 class Tsid {
   final tsid.Tsid _tsid;
@@ -13,6 +13,10 @@ class Tsid {
 
   factory Tsid.getTsid() {
     return Tsid._(tsid.Tsid.getTsid());
+  }
+
+  factory Tsid.getTsid256() {
+    return Tsid._(tsid.Tsid.getTsid256());
   }
 
   factory Tsid.fromNumber(BigInt number) {
@@ -37,8 +41,24 @@ class Tsid {
     return Tsid._(tsid.Tsid.getTsid1024());
   }
 
+  factory Tsid.getTsid4096() {
+    return Tsid._(tsid.Tsid.getTsid4096());
+  }
+
   factory Tsid.fromBytes(Uint8List bytes) {
     return Tsid._(tsid.Tsid.fromBytes(bytes));
+  }
+
+  static bool isValid(String string) {
+    return tsid.Tsid.isValid(string);
+  }
+
+  static Tsid decode(String string, int base) {
+    return Tsid._(tsid.Tsid.decode(string, base));
+  }
+
+  static Tsid unformat(String formatted, String format) {
+    return Tsid._(tsid.Tsid.unformat(formatted, format));
   }
 
   int compareTo(Tsid that) {

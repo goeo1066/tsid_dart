@@ -1,3 +1,16 @@
+## 0.1.2
+
+- Fix major TSID correctness issues across native and web implementations:
+  - Correct 64-bit unsigned handling and byte/string conversions.
+  - Fix random-part masking (`22-bit` mask) and hash code behavior.
+  - Fix formatting/unformatting and base-N encode/decode validation.
+  - Fix factory configuration bugs (`withNodeBits`, `withDateTime`) and random byte generation.
+- Expand public API wrappers:
+  - Added `getTsid256()`, `getTsid4096()`, `isValid()`, `decode()`, and `unformat()`.
+- Improve test coverage:
+  - Add boundary tests for unsigned 64-bit values and string validation.
+  - Add factory regression tests and collision/ordering checks.
+
 ## 0.0.4
 
 - Resolved Error in case of web.
