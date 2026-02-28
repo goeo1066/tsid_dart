@@ -1,8 +1,12 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
 ## 0.1.2
 
 - Fix major TSID correctness issues across native and web implementations:
-  - Correct 64-bit unsigned handling and byte/string conversions.
-  - Fix random-part masking (`22-bit` mask) and hash code behavior.
+  - Correct unsigned 64-bit handling and byte/string conversions.
+  - Fix random-part masking (22-bit mask) and hash code behavior.
   - Fix formatting/unformatting and base-N encode/decode validation.
   - Fix factory configuration bugs (`withNodeBits`, `withDateTime`) and random byte generation.
 - Expand public API wrappers:
@@ -11,14 +15,37 @@
   - Add boundary tests for unsigned 64-bit values and string validation.
   - Add factory regression tests and collision/ordering checks.
 
-## 0.0.4
+## 0.1.1
 
-- Resolved Error in case of web.
-  - Problem was about range of number
-  - Resolved by replacing int to BigInt for web [lib/src/tsid_web.dart](tsid_web.dart)
-  - Some types are mismatched in tsid_default.dart and tsid_web.dart
-    - Probably 'BigInt' will be used instead of 'int' for public methods
+- Restore missing public API methods in the main facade (issue #8).
+- Keep implementation and exposed API behavior aligned across platforms.
+
+## 0.1.0
+
+- Move core factory internals to `BigInt` for safer cross-platform behavior.
+- Refactor and cleanup implementation bridge/stub structure.
+- Update package dependencies and lint configuration.
 
 ## 0.0.5
-- Added == Operator for the Tsid Comparison Test
-  - [PR#2](https://github.com/goeo1066/tsid_dart/pull/2)
+
+- Add and validate `==` operator behavior.
+- Fix `compareTo` to compare against the argument value.
+- Improve related tests.
+
+## 0.0.4
+
+- Split implementation by platform (native vs web).
+- Fix web numeric range issues by moving web implementation to `BigInt`.
+- Align type mismatches between implementations.
+
+## 0.0.3
+
+- Bump package version and SDK/package metadata.
+
+## 0.0.2
+
+- Early public package setup updates (README dependency and platform metadata).
+
+## 1.0.0 (legacy internal version)
+
+- Initial scaffold and early TSID generation implementation before public versioning normalized.
