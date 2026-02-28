@@ -1,8 +1,8 @@
 import 'dart:typed_data' show Uint8List;
 
 import 'imp/tsid.dart'
-    if (dart.library.io) 'imp/tsid_native.dart'
-    if (dart.library.js_interop) 'imp/tsid_web.dart' as tsid;
+if (dart.library.io) 'imp/tsid_native.dart'
+if (dart.library.js_interop) 'imp/tsid_web.dart' as tsid;
 
 class Tsid {
   final tsid.Tsid _tsid;
@@ -17,6 +17,12 @@ class Tsid {
 
   factory Tsid.fromNumber(BigInt number) {
     return Tsid._(tsid.Tsid.fromNumber(number));
+  }
+
+  /// Convenience factory for creating a TSID from an [int].
+  /// This preserves backward compatibility with versions prior to 0.1.0.
+  factory Tsid.fromInt(int number) {
+    return Tsid._(tsid.Tsid.fromNumber(BigInt.from(number)));
   }
 
   factory Tsid.fromString(String string) {
@@ -65,6 +71,30 @@ class Tsid {
     return _tsid.toString();
   }
 
+  String toLowerCase() {
+    return _tsid.toString().toLowerCase();
+  }
+
+  String encode(int base) {
+    return _tsid.encode(base);
+  }
+
+  String format(String format) {
+    return _tsid.format(format);
+  }
+
+  BigInt getTime() {
+    return _tsid.getTime();
+  }
+
+  BigInt getRandom() {
+    return _tsid.getRandom();
+  }
+
+  BigInt getUnixMilliseconds(BigInt customEpoch) {
+    return _tsid.getUnixMilliseconds(customEpoch);
+  }
+
   @override
   int get hashCode => _tsid.hashCode;
 }
@@ -80,6 +110,12 @@ class TsidFactory {
 
   factory TsidFactory.fromNode(BigInt node) {
     return TsidFactory._(tsid.TsidFactory.fromNode(node));
+  }
+
+  /// Convenience factory for creating a TsidFactory from an [int] node.
+  /// This preserves backward compatibility with versions prior to 0.1.0.
+  factory TsidFactory.fromNodeInt(int node) {
+    return TsidFactory._(tsid.TsidFactory.fromNode(BigInt.from(node)));
   }
 
   Tsid create() {
