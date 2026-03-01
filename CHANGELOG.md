@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.1.3
+
+- Improve package documentation for pub.dev scoring:
+  - Add Dartdoc comments across public API.
+  - Add runnable package example at `example/main.dart`.
+- Update README installation snippet and usage notes.
+
 ## 0.1.2
 
 - Fix major TSID correctness issues across native and web implementations:

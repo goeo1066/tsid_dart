@@ -9,7 +9,7 @@ This library is a Dart implementation of [tsid-creator](https://github.com/f4b6a
 ```yaml
 # pubspec.yaml
 dependencies:
-  tsid_dart: ^0.1.2
+  tsid_dart: ^0.1.3
 ```
 
 ## Quick Start
@@ -29,6 +29,14 @@ void main() {
 
   print('$asString -> $asNumber');
 }
+```
+
+## Example Program
+
+An executable example is available in [`example/main.dart`](example/main.dart).
+
+```bash
+dart run example/main.dart
 ```
 
 ## API Highlights
