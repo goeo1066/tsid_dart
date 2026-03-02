@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.2.0
+
+- Bump package version to `0.2.0`.
+- Sync README install snippet with the current release version.
+
 ## 0.1.3
 
 - Improve package documentation for pub.dev scoring:

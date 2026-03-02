@@ -9,7 +9,7 @@ This library is a Dart implementation of [tsid-creator](https://github.com/f4b6a
 ```yaml
 # pubspec.yaml
 dependencies:
-  tsid_dart: ^0.1.3
+  tsid_dart: ^0.2.0
 ```
 
 ## Quick Start
